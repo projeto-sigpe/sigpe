@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sigpe/views/cadastro_page.dart';
 import 'package:sigpe/contents/app_button.dart';
 import 'package:sigpe/contents/app_text.dart';
+import 'package:sigpe/service/service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,8 +15,10 @@ class _LoginPageState extends State<LoginPage> {
   final formKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
   final senhaController = TextEditingController();
+  final AuthService authService = AuthService();
 
   bool mostrarSenha = false;
+  bool carregando = false;
 
   @override
   void dispose() {
@@ -45,14 +48,33 @@ class _LoginPageState extends State<LoginPage> {
     return null;
   }
 
-  void entrar() {
+  Future<void> entrar() async {
     if (!(formKey.currentState?.validate() ?? false)) {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Login realizado com sucesso!')),
-    );
+    setState(() => carregando = true);
+
+    try {
+      await authService.login(
+        email: emailController.text.trim(),
+        password: senhaController.text,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Login realizado com sucesso!')),
+      );
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) {
+        setState(() => carregando = false);
+      }
+    }
   }
 
   @override
@@ -120,7 +142,10 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 28),
 
                 // BOTÃO ENTRAR
-                AppButton(texto: 'Entrar', onPressed: entrar),
+                AppButton(
+                  texto: carregando ? 'Entrando...' : 'Entrar',
+                  onPressed: carregando ? () {} : entrar,
+                ),
 
                 const SizedBox(height: 25),
 
