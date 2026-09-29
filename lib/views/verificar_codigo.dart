@@ -33,22 +33,6 @@ class _VerificarCodigoPageState
         child: Stack(
           children: [
 
-            // FUNDO INFERIOR
-            Positioned(
-              bottom: 0,
-              left: -80,
-              right: -80,
-              child: Container(
-                height: 150,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFF2E9DE),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(180),
-                    topRight: Radius.circular(180),
-                  ),
-                ),
-              ),
-            ),
 
             SingleChildScrollView(
               child: Padding(
@@ -76,11 +60,14 @@ class _VerificarCodigoPageState
 
                     const SizedBox(height: 20),
 
-                    // ÍCONE
-                    const Icon(
-                      Icons.verified_user_outlined,
-                      size: 55,
-                      color: Color(0xFF4B2D1D),
+                    // LOGO
+                    Center(
+                      child: Image.asset(
+                        'assets/escudo.png',
+                        width: 300,
+                        height: 150,
+                        fit: BoxFit.contain,
+                      ),
                     ),
 
                     const SizedBox(height: 18),
