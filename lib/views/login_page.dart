@@ -3,6 +3,7 @@ import 'package:sigpe/views/cadastro_page.dart';
 import 'package:sigpe/contents/app_button.dart';
 import 'package:sigpe/contents/app_text.dart';
 import 'package:sigpe/service/service.dart';
+import 'package:sigpe/views/recuperacao_senha.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -152,7 +153,14 @@ class _LoginPageState extends State<LoginPage> {
                 // ESQUECEU SENHA
                 Center(
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RecuperarSenhaPage(),
+                      ),
+                    );
+                    },
                     child: const Text(
                       'Esqueceu sua senha?',
                       style: TextStyle(color: Colors.black54),

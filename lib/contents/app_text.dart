@@ -44,6 +44,7 @@ class AppText extends StatelessWidget {
             hintText: hintText,
             filled: true,
             fillColor: Colors.white,
+            suffixIcon: suffixIcon,
 
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
