@@ -7,15 +7,16 @@ void main(){
 }
 
 
-class SigpeApp extends StatelessWidget {
-  const SigpeApp({super.key});
+class App extends StatelessWidget {
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'SIGPE',
-      home: const LoginPage(),
+      home: const Home(),
     );
   }
 }
+
