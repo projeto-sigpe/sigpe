@@ -187,6 +187,26 @@ class _CadastroState extends State<Cadastro> {
                 AppButton(texto: 'Cadastrar', onPressed: cadastrar),
 
                 const SizedBox(height: 25),
+
+                //voltar pra login
+                Center(
+                      child: TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+
+                        child: const Text(
+                          'Já possui uma conta? Entrar',
+
+                          style: TextStyle(
+                            color: Color(0xFF6B584A),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 70),
               ],
             ),
           ),
