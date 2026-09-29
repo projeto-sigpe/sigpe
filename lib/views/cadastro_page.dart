@@ -12,6 +12,7 @@ class Cadastro extends StatefulWidget {
 }
 
 class _CadastroState extends State<Cadastro> {
+  final formKey = GlobalKey<FormState>();
   final nomeController = TextEditingController();
   final emailController = TextEditingController();
   final senhaController = TextEditingController();
@@ -27,34 +28,54 @@ class _CadastroState extends State<Cadastro> {
     super.dispose();
   }
 
-  void cadastrar() {
-    if (nomeController.text.isEmpty ||
-        emailController.text.isEmpty ||
-        senhaController.text.isEmpty ||
-        confirmarSenhaController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Preencha todos os campos.'),
-        ),
-      );
-
-      return;
+  String? validarObrigatorio(String? value, String campo) {
+    if (value == null || value.trim().isEmpty) {
+      return '$campo é obrigatório.';
     }
 
-    if (senhaController.text != confirmarSenhaController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('As senhas não coincidem.'),
-        ),
-      );
+    return null;
+  }
 
+  String? validarEmail(String? value) {
+    final email = value?.trim() ?? '';
+    if (email.isEmpty) {
+      return 'E-mail é obrigatório.';
+    }
+
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      return 'Digite um e-mail válido.';
+    }
+
+    return null;
+  }
+
+  String? validarSenha(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Senha é obrigatória.';
+    }
+
+    return null;
+  }
+
+  String? validarConfirmacaoSenha(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Confirmação de senha é obrigatória.';
+    }
+
+    if (value != senhaController.text) {
+      return 'As senhas não coincidem.';
+    }
+
+    return null;
+  }
+
+  void cadastrar() {
+    if (!(formKey.currentState?.validate() ?? false)) {
       return;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Cadastro realizado com sucesso!'),
-      ),
+      const SnackBar(content: Text('Cadastro realizado com sucesso!')),
     );
   }
 
@@ -65,115 +86,109 @@ class _CadastroState extends State<Cadastro> {
 
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 28,
-            vertical: 20,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
 
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-
-              // BOTÃO VOLTAR
-              IconButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Color(0xFF3B2417),
+          child: Form(
+            key: formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // BOTÃO VOLTAR
+                IconButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  icon: const Icon(Icons.arrow_back, color: Color(0xFF3B2417)),
                 ),
-              ),
 
-              const SizedBox(height: 10),
+                const SizedBox(height: 10),
 
-              // LOGO
-              Center(
-                child: Image.asset(
-                  'assets/Logo2.png',
-                  width: 450,
-                  height: 200,
-                  fit: BoxFit.contain,
+                // LOGO
+                Center(
+                  child: Image.asset(
+                    'assets/Logo2.png',
+                    width: 450,
+                    height: 200,
+                    fit: BoxFit.contain,
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              // TÍTULO
-              const Center(
-                child: Column(
-                  children: [
-                    Text(
-                      'Cadastro de Coordenador',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF3B2417),
+                // TÍTULO
+                const Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        'Cadastro de Coordenador',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF3B2417),
+                        ),
                       ),
-                    ),
 
-                    SizedBox(height: 7),
+                      SizedBox(height: 7),
 
-                    Text(
-                      'Crie sua conta de administrador',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.black54,
+                      Text(
+                        'Crie sua conta de administrador',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 14, color: Colors.black54),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 35),
+                const SizedBox(height: 35),
 
-              // NOME
-              AppText(
-                label: 'Nome completo',
-                hintText: 'Ex: Maria Silva',
-                controller: nomeController,
-              ),
+                // NOME
+                AppText(
+                  label: 'Nome completo',
+                  hintText: 'Ex: Maria Silva',
+                  controller: nomeController,
+                  validator: (value) => validarObrigatorio(value, 'Nome'),
+                ),
 
-              const SizedBox(height: 18),
+                const SizedBox(height: 18),
 
-              // E-MAIL
-              AppText(
-                label: 'E-mail institucional',
-                hintText: 'exemplo@escola.edu.br',
-                controller: emailController,
-                keyboardType: TextInputType.emailAddress,
-              ),
+                // E-MAIL
+                AppText(
+                  label: 'E-mail institucional',
+                  hintText: 'exemplo@escola.edu.br',
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: validarEmail,
+                ),
 
-              const SizedBox(height: 18),
+                const SizedBox(height: 18),
 
-              // SENHA
-              AppPassword(
-                label: 'Senha',
-                hintText: 'Crie uma senha segura',
-                controller: senhaController,
-              ),
+                // SENHA
+                AppPassword(
+                  label: 'Senha',
+                  hintText: 'Crie uma senha segura',
+                  controller: senhaController,
+                  validator: validarSenha,
+                ),
 
-              const SizedBox(height: 18),
+                const SizedBox(height: 18),
 
-              // CONFIRMAR SENHA
-              AppPassword(
-                label: 'Confirmar senha',
-                hintText: 'Repita a senha',
-                controller: confirmarSenhaController,
-              ),
+                // CONFIRMAR SENHA
+                AppPassword(
+                  label: 'Confirmar senha',
+                  hintText: 'Repita a senha',
+                  controller: confirmarSenhaController,
+                  validator: validarConfirmacaoSenha,
+                ),
 
-              const SizedBox(height: 28),
+                const SizedBox(height: 28),
 
-              // BOTÃO CADASTRAR
-              AppButton(
-                texto: 'Cadastrar',
-                onPressed: cadastrar,
-              ),
+                // BOTÃO CADASTRAR
+                AppButton(texto: 'Cadastrar', onPressed: cadastrar),
 
-              const SizedBox(height: 25),
-            ],
+                const SizedBox(height: 25),
+              ],
+            ),
           ),
         ),
       ),
