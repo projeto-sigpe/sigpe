@@ -4,6 +4,7 @@ import 'package:sigpe/contents/app_button.dart';
 import 'package:sigpe/contents/app_text.dart';
 import 'package:sigpe/service/service.dart';
 import 'package:sigpe/views/recuperacao_senha.dart';
+import 'package:sigpe/service/token_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -17,6 +18,7 @@ class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final senhaController = TextEditingController();
   final AuthService authService = AuthService();
+  final TokenService tokenService = TokenService();
 
   bool mostrarSenha = false;
   bool carregando = false;
