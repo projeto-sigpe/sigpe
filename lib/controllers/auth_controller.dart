@@ -7,3 +7,7 @@ class AuthController {
   Future<void> login(String token) async {
     await _tokenService.saveToken(token);
   }
+
+  Future<bool> isLoggedIn() async {
+    return await _tokenService.hasToken();
+  }
