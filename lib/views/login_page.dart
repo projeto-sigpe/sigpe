@@ -64,6 +64,10 @@ class _LoginPageState extends State<LoginPage> {
         password: senhaController.text,
       );
 
+final possuiToken = await authService.hasSession();
+
+print('POSSUI SESSÃO: $possuiToken');
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Login realizado com sucesso!')),

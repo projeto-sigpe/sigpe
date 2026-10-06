@@ -76,6 +76,10 @@ class AuthService {
   }) : _client = client ?? http.Client(),
        _tokenService = tokenService ?? TokenService();
 
+  Future<bool> hasSession() async {
+  return await _tokenService.hasToken();
+}
+
   Future<AuthResponse> login({
     required String email,
     required String password,
