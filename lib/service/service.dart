@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import 'token_service.dart';
+
 class ApiConfig {
   static const String baseUrl = 'http://localhost:8081';
   static const Duration requestTimeout = Duration(seconds: 15);
@@ -65,9 +67,14 @@ class AuthException implements Exception {
 class AuthService {
   final http.Client _client;
   final String baseUrl;
+  final TokenService _tokenService;
 
-  AuthService({http.Client? client, this.baseUrl = ApiConfig.baseUrl})
-    : _client = client ?? http.Client();
+  AuthService({
+    http.Client? client,
+    this.baseUrl = ApiConfig.baseUrl,
+    TokenService? tokenService,
+  }) : _client = client ?? http.Client(),
+       _tokenService = tokenService ?? TokenService();
 
   Future<AuthResponse> login({
     required String email,
@@ -91,7 +98,14 @@ class AuthService {
 
       switch (response.statusCode) {
         case 200:
-          return AuthResponse.fromJson(body);
+  final authResponse = AuthResponse.fromJson(body);
+
+  if (authResponse.accessToken != null) {
+    await _tokenService.saveToken(authResponse.accessToken!);
+  }
+
+  return authResponse;
+
         case 401:
           throw const AuthException(
             'E-mail ou senha inválidos.',
