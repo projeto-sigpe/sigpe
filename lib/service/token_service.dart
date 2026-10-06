@@ -14,3 +14,9 @@ class TokenService {
 
     return prefs.getString(_tokenKey);
   }
+
+  Future<bool> hasToken() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    return prefs.containsKey(_tokenKey);
+  }
