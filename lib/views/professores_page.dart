@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sigpe/contents/app_search.dart';
 import 'package:sigpe/contents/bottom_nav.dart';
 import 'package:sigpe/contents/professor_card.dart';
+import 'package:sigpe/views/perfil_professor.dart';
 
 class ProfessoresPage extends StatefulWidget {
   const ProfessoresPage({super.key});
@@ -100,11 +101,23 @@ class _ProfessoresPageState extends State<ProfessoresPage> {
                       itemBuilder: (context, index) {
                         final professor = filtrados[index];
 
-                        return ProfessorCard(
-                          nome: professor['nome'],
-                          disciplina: professor['disciplina'],
-                          matricula: professor['matricula'],
-                          quantidadeBens: professor['quantidadeBens'],
+                        return InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const PerfilProfessorPage(),
+                              ),
+                            );
+                          },
+                          child: ProfessorCard(
+                            nome: professor['nome'],
+                            disciplina: professor['disciplina'],
+                            matricula: professor['matricula'],
+                            quantidadeBens: professor['quantidadeBens'],
+                          ),
                         );
                       },
                     ),
