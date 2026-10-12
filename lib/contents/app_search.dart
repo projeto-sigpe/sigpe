@@ -10,6 +10,7 @@ class AppSearch extends StatelessWidget {
     this.hint = 'Buscar...',
     this.controller,
     this.onChanged,
+    required String hintText,
   });
 
   @override
@@ -21,17 +22,12 @@ class AppSearch extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
 
-        prefixIcon: const Icon(
-          Icons.search,
-          size: 20,
-        ),
+        prefixIcon: const Icon(Icons.search, size: 20),
 
         filled: true,
         fillColor: Colors.white,
 
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 10,
-        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 10),
 
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
