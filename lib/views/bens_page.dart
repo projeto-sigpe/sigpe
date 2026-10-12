@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sigpe/contents/bottom_nav.dart';
 import 'package:sigpe/contents/patrimonio_card.dart';
+import 'package:sigpe/views/cadastrar_bens.dart';
 
 class BensPage extends StatefulWidget {
   const BensPage({super.key});
@@ -111,14 +112,25 @@ class _BensPageState extends State<BensPage> {
                   ),
                   IconButton(
                     tooltip: 'Cadastrar bem',
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'A tela de cadastro será criada no próximo passo.',
-                          ),
+                    onPressed: () async {
+                      final novoBem = await Navigator.push<Map<String, String>>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CadastrarBensPage(),
                         ),
                       );
+
+                      if (novoBem != null && mounted) {
+                        setState(() {
+                          _bens.add(novoBem);
+                        });
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Bem cadastrado com sucesso!'),
+                          ),
+                        );
+                      }
                     },
                     icon: const Icon(
                       Icons.add_circle_outline,
