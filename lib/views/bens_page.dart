@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:sigpe/contents/bottom_nav.dart';
 import 'package:sigpe/contents/patrimonio_card.dart';
+import 'package:sigpe/views/atribuir_bens.dart';
 import 'package:sigpe/views/cadastrar_bens.dart';
+import 'package:sigpe/views/devolver_bens.dart';
+import 'package:sigpe/views/historico_bens.dart';
 
 class BensPage extends StatefulWidget {
   const BensPage({super.key});
@@ -74,6 +77,131 @@ class _BensPageState extends State<BensPage> {
 
       return correspondeBusca && correspondeStatus && correspondeCategoria;
     }).toList();
+  }
+
+  void _mostrarOpcoesBens(Map<String, String> bem) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFFF5EFE7),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 42,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD2C4B6),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              Text(
+                bem['nome'] ?? 'Patrimônio',
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF3B2417),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Tombo: ${bem['tombo']}',
+                style: const TextStyle(fontSize: 13, color: Color(0xFF80634E)),
+              ),
+              const SizedBox(height: 18),
+
+              _opcaoBem(
+                icone: Icons.history,
+                titulo: 'Ver histórico',
+                descricao: 'Consultar movimentações do patrimônio',
+                aoTocar: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    this.context,
+                    MaterialPageRoute(
+                      builder: (_) => HistoricoBensPage(bem: bem),
+                    ),
+                  );
+                },
+              ),
+
+              _opcaoBem(
+                icone: Icons.person_add_alt_1,
+                titulo: 'Atribuir bem',
+                descricao: 'Vincular o bem a um professor',
+                aoTocar: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    this.context,
+                    MaterialPageRoute(
+                      builder: (_) => AtribuirBensPage(bem: bem),
+                    ),
+                  );
+                },
+              ),
+
+              _opcaoBem(
+                icone: Icons.assignment_return_outlined,
+                titulo: 'Devolver bem',
+                descricao: 'Registrar a devolução do patrimônio',
+                aoTocar: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    this.context,
+                    MaterialPageRoute(
+                      builder: (_) => DevolverBensPage(bem: bem),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _opcaoBem({
+    required IconData icone,
+    required String titulo,
+    required String descricao,
+    required VoidCallback aoTocar,
+  }) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      leading: Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: const Color(0xFFE9DED2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icone, color: const Color(0xFF5A3824)),
+      ),
+      title: Text(
+        titulo,
+        style: const TextStyle(
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF3B2417),
+        ),
+      ),
+      subtitle: Text(
+        descricao,
+        style: const TextStyle(fontSize: 12, color: Color(0xFF80634E)),
+      ),
+      trailing: const Icon(Icons.chevron_right, color: Color(0xFF80634E)),
+      onTap: aoTocar,
+    );
   }
 
   @override
@@ -277,12 +405,16 @@ class _BensPageState extends State<BensPage> {
                     ..._bensFiltrados.map((bem) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: PatrimonioCard(
-                          nome: bem['nome']!,
-                          tombo: bem['tombo']!,
-                          categoria: bem['categoria']!,
-                          local: bem['local']!,
-                          status: bem['status']!,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(14),
+                          onTap: () => _mostrarOpcoesBens(bem),
+                          child: PatrimonioCard(
+                            nome: bem['nome']!,
+                            tombo: bem['tombo']!,
+                            categoria: bem['categoria']!,
+                            local: bem['local']!,
+                            status: bem['status']!,
+                          ),
                         ),
                       );
                     }),
