@@ -24,9 +24,7 @@ class ProfessorCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFFE8DED3),
-        ),
+        border: Border.all(color: const Color(0xFFE8DED3)),
       ),
 
       child: Row(
@@ -35,15 +33,10 @@ class ProfessorCard extends StatelessWidget {
             radius: 25,
             backgroundColor: const Color(0xFFE9DED2),
 
-            backgroundImage: imagem != null
-                ? AssetImage(imagem!)
-                : null,
+            backgroundImage: imagem != null ? AssetImage(imagem!) : null,
 
             child: imagem == null
-                ? const Icon(
-                    Icons.person,
-                    color: Color(0xFF5A3824),
-                  )
+                ? const Icon(Icons.person, color: Color(0xFF5A3824))
                 : null,
           ),
 
@@ -63,19 +56,11 @@ class ProfessorCard extends StatelessWidget {
 
                 const SizedBox(height: 3),
 
-                Text(
-                  disciplina,
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
-                ),
+                Text(disciplina, style: const TextStyle(fontSize: 12)),
 
                 Text(
                   'Matrícula: $matricula',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Colors.black54,
-                  ),
+                  style: const TextStyle(fontSize: 11, color: Colors.black54),
                 ),
               ],
             ),
@@ -93,10 +78,7 @@ class ProfessorCard extends StatelessWidget {
 
               const Text(
                 'bens',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.black54,
-                ),
+                style: TextStyle(fontSize: 10, color: Colors.black54),
               ),
             ],
           ),

@@ -21,9 +21,7 @@ class SectionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: const Color(0xFFE8DED3),
-        ),
+        border: Border.all(color: const Color(0xFFE8DED3)),
       ),
 
       child: Column(
@@ -42,7 +40,7 @@ class SectionCard extends StatelessWidget {
                 ),
               ),
 
-              if (trailing != null) trailing!,
+              ?trailing,
             ],
           ),
 

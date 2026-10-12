@@ -3,6 +3,7 @@ import 'package:sigpe/views/cadastro_page.dart';
 import 'package:sigpe/contents/app_button.dart';
 import 'package:sigpe/contents/app_text.dart';
 import 'package:sigpe/service/service.dart';
+import 'package:sigpe/views/dashboard.dart';
 import 'package:sigpe/views/recuperacao_senha.dart';
 
 class LoginPage extends StatefulWidget {
@@ -63,8 +64,10 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login realizado com sucesso!')),
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Dashboard()),
       );
     } on AuthException catch (error) {
       if (!mounted) return;
@@ -155,11 +158,11 @@ class _LoginPageState extends State<LoginPage> {
                   child: TextButton(
                     onPressed: () {
                       Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const RecuperarSenhaPage(),
-                      ),
-                    );
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const RecuperarSenhaPage(),
+                        ),
+                      );
                     },
                     child: const Text(
                       'Esqueceu sua senha?',
