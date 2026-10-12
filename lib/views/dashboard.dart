@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sigpe/views/bens_page.dart';
 import 'package:sigpe/views/professores_page.dart';
 
 import '../contents/bottom_nav.dart';
@@ -67,6 +68,12 @@ class _DashboardState extends State<Dashboard> {
       bottomNavigationBar: AppBottomNav(
         currentIndex: _currentIndex,
         onTap: (index) {
+          if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const BensPage()),
+            );
+          }
           if (index == 2) {
             Navigator.push(
               context,
