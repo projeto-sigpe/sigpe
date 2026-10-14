@@ -5,6 +5,7 @@ import 'package:sigpe/contents/app_text.dart';
 import 'package:sigpe/service/service.dart';
 import 'package:sigpe/views/dashboard.dart';
 import 'package:sigpe/views/recuperacao_senha.dart';
+import 'package:sigpe/views/dashboard_professor.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -57,20 +58,34 @@ class _LoginPageState extends State<LoginPage> {
 
     setState(() => carregando = true);
 
+    final email = emailController.text.trim().toLowerCase();
+
     try {
-      await authService.login(
-        email: emailController.text.trim(),
-        password: senhaController.text,
-      );
+      await authService.login(email: email, password: senhaController.text);
 
       if (!mounted) return;
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const Dashboard()),
-      );
+      if (email == 'admin@admin.com') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Dashboard()),
+        );
+      } else if (email == 'professor@escola.com' ||
+          email == 'maria.silva@escola.com') {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const DashboardProfessorPage(),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Perfil de usuário não reconhecido.')),
+        );
+      }
     } on AuthException catch (error) {
       if (!mounted) return;
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(error.message)));
