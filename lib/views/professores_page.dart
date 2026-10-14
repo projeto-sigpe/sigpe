@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sigpe/contents/app_search.dart';
 import 'package:sigpe/contents/bottom_nav.dart';
 import 'package:sigpe/contents/professor_card.dart';
-import 'package:sigpe/views/perfil_professor.dart';
+import 'package:sigpe/views/perfil_professores.dart';
 
 class ProfessoresPage extends StatefulWidget {
   const ProfessoresPage({super.key});
@@ -108,7 +108,7 @@ class _ProfessoresPageState extends State<ProfessoresPage> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    const PerfilProfessorPage(),
+                                    const PerfilProfessoresPage(),
                               ),
                             );
                           },

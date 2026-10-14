@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:sigpe/contents/bottom_nav.dart';
 import 'package:sigpe/contents/patrimonio_card.dart';
 
-class PerfilProfessorPage extends StatefulWidget {
-  const PerfilProfessorPage({super.key});
+class PerfilProfessoresPage extends StatefulWidget {
+  const PerfilProfessoresPage({super.key});
 
   @override
-  State<PerfilProfessorPage> createState() => _PerfilProfessorPageState();
+  State<PerfilProfessoresPage> createState() => _PerfilProfessoresPageState();
 }
 
-class _PerfilProfessorPageState extends State<PerfilProfessorPage> {
+class _PerfilProfessoresPageState extends State<PerfilProfessoresPage> {
   int _currentIndex = 2;
 
   // Dados fictícios baseados no JSON fornecido

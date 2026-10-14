@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sigpe/contents/professor_bottom_nav.dart';
 import 'package:sigpe/views/dashboard_professor.dart';
+import 'package:sigpe/views/detalhes_bens_professor.dart';
+import 'package:sigpe/views/perfil_professor_page.dart';
 
 class BensProfessorPage extends StatefulWidget {
   const BensProfessorPage({super.key});
@@ -19,7 +21,6 @@ class _BensProfessorPageState extends State<BensProfessorPage> {
 
   String busca = '';
 
-  // Dados fictícios dos bens atribuídos ao professor.
   final List<Map<String, String>> bens = [
     {
       'nome': 'Notebook Dell',
@@ -28,6 +29,10 @@ class _BensProfessorPageState extends State<BensProfessorPage> {
       'data': '10/04/2025',
       'status': 'Em uso',
       'icone': 'notebook',
+      'categoria': 'Informática',
+      'marca': 'Dell',
+      'serie': 'DELL-NT-001',
+      'responsavel': 'Prof. Carlos Drummond',
     },
     {
       'nome': 'Projetor Epson',
@@ -36,6 +41,10 @@ class _BensProfessorPageState extends State<BensProfessorPage> {
       'data': '13/04/2025',
       'status': 'Em uso',
       'icone': 'projetor',
+      'categoria': 'Equipamento audiovisual',
+      'marca': 'Epson',
+      'serie': 'EPS-PJ-007',
+      'responsavel': 'Prof. Carlos Drummond',
     },
     {
       'nome': 'Tablet Samsung',
@@ -44,6 +53,10 @@ class _BensProfessorPageState extends State<BensProfessorPage> {
       'data': '20/04/2025',
       'status': 'Em uso',
       'icone': 'tablet',
+      'categoria': 'Informática',
+      'marca': 'Samsung',
+      'serie': 'SAM-TB-012',
+      'responsavel': 'Prof. Carlos Drummond',
     },
   ];
 
@@ -53,9 +66,9 @@ class _BensProfessorPageState extends State<BensProfessorPage> {
     if (termo.isEmpty) return bens;
 
     return bens.where((bem) {
-      return bem['nome']!.toLowerCase().contains(termo) ||
-          bem['tombo']!.toLowerCase().contains(termo) ||
-          bem['local']!.toLowerCase().contains(termo);
+      return (bem['nome'] ?? '').toLowerCase().contains(termo) ||
+          (bem['tombo'] ?? '').toLowerCase().contains(termo) ||
+          (bem['local'] ?? '').toLowerCase().contains(termo);
     }).toList();
   }
 
@@ -63,6 +76,13 @@ class _BensProfessorPageState extends State<BensProfessorPage> {
   void dispose() {
     buscaController.dispose();
     super.dispose();
+  }
+
+  void _abrirDetalhes(Map<String, String> bem) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => DetalhesBemProfessorPage(bem: bem)),
+    );
   }
 
   @override
@@ -174,6 +194,7 @@ class _BensProfessorPageState extends State<BensProfessorPage> {
         ),
       ),
 
+      // Navbar exclusiva do professor
       bottomNavigationBar: ProfessorBottomNav(
         currentIndex: 1,
         onTap: (index) {
@@ -183,8 +204,9 @@ class _BensProfessorPageState extends State<BensProfessorPage> {
               MaterialPageRoute(builder: (_) => const DashboardProfessorPage()),
             );
           } else if (index == 2) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Tela de perfil em breve.')),
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const PerfilProfessorPage()),
             );
           }
         },
@@ -193,81 +215,85 @@ class _BensProfessorPageState extends State<BensProfessorPage> {
   }
 
   Widget _cartaoBem(Map<String, String> bem) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.65),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFEDE4D9), width: 0.7),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Espaço da imagem do patrimônio
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: bege,
-              borderRadius: BorderRadius.circular(10),
+    return InkWell(
+      onTap: () => _abrirDetalhes(bem),
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.65),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFEDE4D9), width: 0.7),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Ícone do patrimônio
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: bege,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(_iconeBem(bem['icone']), color: marrom, size: 30),
             ),
-            child: Icon(_iconeBem(bem['icone']), color: marrom, size: 30),
-          ),
 
-          const SizedBox(width: 10),
+            const SizedBox(width: 10),
 
-          // Informações do bem
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  bem['nome']!,
-                  style: const TextStyle(
-                    color: marrom,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
+            // Informações do bem
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    bem['nome'] ?? 'Equipamento',
+                    style: const TextStyle(
+                      color: marrom,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  'Tombamento: ${bem['tombo']}',
-                  style: const TextStyle(color: texto, fontSize: 10),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  bem['local']!,
-                  style: const TextStyle(color: texto, fontSize: 10),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Atribuído em: ${bem['data']}',
-                  style: const TextStyle(color: texto, fontSize: 9),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(width: 5),
-
-          // Status
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: marrom,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              bem['status']!,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 8,
-                fontWeight: FontWeight.w500,
+                  const SizedBox(height: 3),
+                  Text(
+                    'Tombamento: ${bem['tombo'] ?? 'Não informado'}',
+                    style: const TextStyle(color: texto, fontSize: 10),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    bem['local'] ?? 'Local não informado',
+                    style: const TextStyle(color: texto, fontSize: 10),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Atribuído em: ${bem['data'] ?? 'Não informado'}',
+                    style: const TextStyle(color: texto, fontSize: 9),
+                  ),
+                ],
               ),
             ),
-          ),
-        ],
+
+            const SizedBox(width: 5),
+
+            // Status
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: marrom,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                bem['status'] ?? 'Indefinido',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 8,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

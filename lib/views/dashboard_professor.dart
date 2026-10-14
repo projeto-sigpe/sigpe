@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sigpe/contents/professor_bottom_nav.dart';
 import 'package:sigpe/views/bens_professor.dart';
+import 'package:sigpe/views/perfil_professor_page.dart';
 
 class DashboardProfessorPage extends StatefulWidget {
   const DashboardProfessorPage({super.key});
@@ -333,10 +334,9 @@ class _DashboardProfessorPageState extends State<DashboardProfessorPage> {
               MaterialPageRoute(builder: (_) => const BensProfessorPage()),
             );
           } else if (index == 2) {
-            setState(() => _currentIndex = 2);
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Tela de perfil em breve.')),
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (_) => const PerfilProfessorPage()),
             );
           }
         },
