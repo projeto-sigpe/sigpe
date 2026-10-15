@@ -1,60 +1,54 @@
-
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TokenService {
-  static const FlutterSecureStorage _storage =
-      FlutterSecureStorage();
+  static const String _accessTokenKey = 'jwt_access_token';
+  static const String _refreshTokenKey = 'jwt_refresh_token';
 
-  static const String _tokenKey = 'jwt_token';
-  static const String _refreshTokenKey = 'refresh_token';
-
-  // salvar o jwt principal
-  Future<void> saveToken(String token) async {
-    if (token.trim().isEmpty) {
-      throw ArgumentError('o token não pode estar vazio.');
-    }
-
-    await _storage.write(
-      key: _tokenKey,
-      value: token,
-    );
+  /// Salva o Access Token JWT
+  Future<void> saveToken(String accessToken) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_accessTokenKey, accessToken);
   }
 
-  // recuperar o jwt principal
+  /// Salva o Refresh Token
+  Future<void> saveRefreshToken(String refreshToken) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_refreshTokenKey, refreshToken);
+  }
+
+  /// Recupera o Access Token JWT
   Future<String?> getToken() async {
-    return _storage.read(key: _tokenKey);
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_accessTokenKey);
   }
 
-  // verificar se existe um jwt salvo
+  /// Recupera o Refresh Token
+  Future<String?> getRefreshToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_refreshTokenKey);
+  }
+
+  /// Verifica se existe um token de acesso válido guardado
   Future<bool> hasToken() async {
     final token = await getToken();
     return token != null && token.trim().isNotEmpty;
   }
 
-  // remover o jwt principal
+  /// Remove o Access Token JWT
   Future<void> removeToken() async {
-    await _storage.delete(key: _tokenKey);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_accessTokenKey);
   }
 
-  // salvar o refresh token
-  Future<void> saveRefreshToken(String token) async {
-    if (token.trim().isEmpty) {
-      throw ArgumentError('o refresh token não pode estar vazio.');
-    }
-
-    await _storage.write(
-      key: _refreshTokenKey,
-      value: token,
-    );
-  }
-
-  // recuperar o refresh token
-  Future<String?> getRefreshToken() async {
-    return _storage.read(key: _refreshTokenKey);
-  }
-
-  // remover o refresh token
+  /// Remove o Refresh Token
   Future<void> removeRefreshToken() async {
-    await _storage.delete(key: _refreshTokenKey);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_refreshTokenKey);
+  }
+
+  /// Limpa todos os tokens salvos
+  Future<void> clearAll() async {
+    await removeToken();
+    await removeRefreshToken();
   }
 }

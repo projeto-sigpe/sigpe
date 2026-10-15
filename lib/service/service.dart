@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'dart:convert';
 
@@ -27,30 +26,17 @@ class AuthResponse {
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
     final user = json['user'];
-    final userData = user is Map<String, dynamic>
-        ? user
-        : <String, dynamic>{};
+    final userData = user is Map<String, dynamic> ? user : <String, dynamic>{};
 
     return AuthResponse(
-      accessToken: _readString(json, [
-        'access_token',
-        'accessToken',
-        'token',
-      ]),
-      refreshToken: _readString(json, [
-        'refresh_token',
-        'refreshToken',
-      ]),
-      role: _readString(json, ['role']) ??
-          _readString(userData, ['role']),
+      accessToken: _readString(json, ['access_token', 'accessToken', 'token']),
+      refreshToken: _readString(json, ['refresh_token', 'refreshToken']),
+      role: _readString(json, ['role']) ?? _readString(userData, ['role']),
       data: json,
     );
   }
 
-  static String? _readString(
-    Map<String, dynamic> json,
-    List<String> keys,
-  ) {
+  static String? _readString(Map<String, dynamic> json, List<String> keys) {
     for (final key in keys) {
       final value = json[key];
 
@@ -76,12 +62,14 @@ class AuthException implements Exception {
 class AuthService {
   final http.Client _client;
   final String baseUrl;
-  final TokenService _tokenService = TokenService();
+  final TokenService _tokenService;
 
   AuthService({
     http.Client? client,
+    TokenService? tokenService,
     this.baseUrl = ApiConfig.baseUrl,
-  }) : _client = client ?? http.Client();
+  })  : _client = client ?? http.Client(),
+        _tokenService = tokenService ?? TokenService();
 
   // LOGIN
   Future<AuthResponse> login({
@@ -98,10 +86,7 @@ class AuthService {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
             },
-            body: jsonEncode({
-              'email': email,
-              'password': password,
-            }),
+            body: jsonEncode({'email': email, 'password': password}),
           )
           .timeout(ApiConfig.requestTimeout);
 
@@ -123,9 +108,8 @@ class AuthService {
         );
       }
 
-      // login realizado
-      if (response.statusCode == 200 ||
-          response.statusCode == 201) {
+      // login realizado com sucesso
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final authResponse = AuthResponse.fromJson(body);
         final accessToken = authResponse.accessToken;
 
@@ -136,7 +120,6 @@ class AuthService {
         }
 
         await _tokenService.saveToken(accessToken);
-
         debugPrint('login: token de acesso salvo com sucesso.');
 
         final refreshToken = authResponse.refreshToken;
@@ -150,8 +133,7 @@ class AuthService {
       }
 
       throw AuthException(
-        _messageFrom(body) ??
-            'não foi possível realizar o login.',
+        _messageFrom(body) ?? 'não foi possível realizar o login.',
         statusCode: response.statusCode,
       );
     } on AuthException {
@@ -162,8 +144,7 @@ class AuthService {
       );
     } on http.ClientException {
       throw const AuthException(
-        'não foi possível conectar ao servidor. '
-        'verifique se a api está funcionando.',
+        'não foi possível conectar ao servidor. verifique se a api está funcionando.',
       );
     } on FormatException {
       throw const AuthException(
@@ -173,8 +154,7 @@ class AuthService {
       debugPrint('erro interno durante o login: $e');
 
       throw const AuthException(
-        'não foi possível concluir o login. '
-        'verifique a conexão e tente novamente.',
+        'não foi possível concluir o login. verifique a conexão e tente novamente.',
       );
     }
   }
@@ -207,9 +187,7 @@ class AuthService {
     final token = await _tokenService.getToken();
 
     if (token == null || token.trim().isEmpty) {
-      throw const AuthException(
-        'sessão não encontrada. faça login novamente.',
-      );
+      throw const AuthException('sessão não encontrada. faça login novamente.');
     }
 
     return {
@@ -233,10 +211,7 @@ class AuthService {
     final nestedData = decoded['data'];
 
     if (nestedData is Map<String, dynamic>) {
-      return {
-        ...decoded,
-        ...nestedData,
-      };
+      return {...decoded, ...nestedData};
     }
 
     return decoded;
@@ -246,9 +221,7 @@ class AuthService {
   String? _messageFrom(Map<String, dynamic> body) {
     final message = body['message'] ?? body['error'];
 
-    return message is String && message.trim().isNotEmpty
-        ? message
-        : null;
+    return message is String && message.trim().isNotEmpty ? message : null;
   }
 
   // LIBERAR O CLIENTE HTTP
