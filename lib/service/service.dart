@@ -1,6 +1,8 @@
+
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import 'token_service.dart';
@@ -52,7 +54,7 @@ class AuthResponse {
     for (final key in keys) {
       final value = json[key];
 
-      if (value is String && value.isNotEmpty) {
+      if (value is String && value.trim().isNotEmpty) {
         return value;
       }
     }
@@ -105,76 +107,84 @@ class AuthService {
 
       final body = _decodeBody(response.body);
 
+      // credenciais inválidas
+      if (response.statusCode == 401) {
+        throw const AuthException(
+          'e-mail ou senha inválidos.',
+          statusCode: 401,
+        );
+      }
+
+      // acesso negado
+      if (response.statusCode == 403) {
+        throw const AuthException(
+          'acesso negado para este usuário.',
+          statusCode: 403,
+        );
+      }
+
+      // login realizado
       if (response.statusCode == 200 ||
           response.statusCode == 201) {
         final authResponse = AuthResponse.fromJson(body);
-
         final accessToken = authResponse.accessToken;
 
         if (accessToken == null || accessToken.isEmpty) {
           throw const AuthException(
-            'Login realizado, mas a API não retornou o JWT esperado.',
+            'a api não retornou o token de acesso esperado.',
           );
         }
 
         await _tokenService.saveToken(accessToken);
 
+        debugPrint('login: token de acesso salvo com sucesso.');
+
         final refreshToken = authResponse.refreshToken;
 
         if (refreshToken != null && refreshToken.isNotEmpty) {
           await _tokenService.saveRefreshToken(refreshToken);
+          debugPrint('login: refresh token salvo com sucesso.');
         }
 
         return authResponse;
       }
 
-      if (response.statusCode == 401) {
-        throw const AuthException(
-          'E-mail ou senha inválidos.',
-          statusCode: 401,
-        );
-      }
-
-      if (response.statusCode == 403) {
-        throw const AuthException(
-          'Acesso negado para este usuário.',
-          statusCode: 403,
-        );
-      }
-
       throw AuthException(
-        _messageFrom(body) ?? 'Não foi possível realizar o login.',
+        _messageFrom(body) ??
+            'não foi possível realizar o login.',
         statusCode: response.statusCode,
       );
     } on AuthException {
       rethrow;
     } on TimeoutException {
       throw const AuthException(
-        'A conexão com o servidor expirou.',
+        'tempo limite de conexão excedido. tente novamente.',
       );
     } on http.ClientException {
       throw const AuthException(
-        'Não foi possível conectar ao servidor. '
-        'Verifique a API e sua rede.',
+        'não foi possível conectar ao servidor. '
+        'verifique se a api está funcionando.',
       );
     } on FormatException {
       throw const AuthException(
-        'A resposta do servidor está em um formato inválido.',
+        'a resposta do servidor está em um formato inválido.',
       );
-    } catch (_) {
+    } catch (e) {
+      debugPrint('erro interno durante o login: $e');
+
       throw const AuthException(
-        'Não foi possível concluir o login. '
-        'Verifique a conexão e tente novamente.',
+        'não foi possível concluir o login. '
+        'verifique a conexão e tente novamente.',
       );
     }
   }
 
-  // RECUPERAR JWT
+  // RECUPERAR TOKEN
   Future<String?> getToken() async {
     return _tokenService.getToken();
   }
 
-  // VERIFICAR SESSÃO LOCAL
+  // VERIFICAR SE EXISTE UMA SESSÃO
   Future<bool> hasSession() async {
     return _tokenService.hasToken();
   }
@@ -184,19 +194,21 @@ class AuthService {
     return _tokenService.getRefreshToken();
   }
 
-  // LOGOUT
-Future<void> logout() async {
-  await _tokenService.removeToken();
-  await _tokenService.removeRefreshToken();
-}
+  // ENCERRAR SESSÃO
+  Future<void> logout() async {
+    await _tokenService.removeToken();
+    await _tokenService.removeRefreshToken();
 
-  // REQUISIÇÕES AUTENTICADAS
+    debugPrint('logout: tokens removidos.');
+  }
+
+  // CABEÇALHOS PARA REQUISIÇÕES AUTENTICADAS
   Future<Map<String, String>> getAuthHeaders() async {
     final token = await _tokenService.getToken();
 
-    if (token == null || token.isEmpty) {
+    if (token == null || token.trim().isEmpty) {
       throw const AuthException(
-        'Sessão não encontrada. Faça login novamente.',
+        'sessão não encontrada. faça login novamente.',
       );
     }
 
@@ -206,6 +218,7 @@ Future<void> logout() async {
     };
   }
 
+  // CONVERTER A RESPOSTA DA API EM JSON
   Map<String, dynamic> _decodeBody(String body) {
     if (body.trim().isEmpty) {
       return <String, dynamic>{};
@@ -213,35 +226,32 @@ Future<void> logout() async {
 
     final decoded = jsonDecode(body);
 
-    if (decoded is Map<String, dynamic>) {
-      // Aceita também respostas com os dados dentro de "data".
-      final nestedData = decoded['data'];
-
-      if (nestedData is Map<String, dynamic> &&
-          decoded['access_token'] == null &&
-          decoded['accessToken'] == null &&
-          decoded['token'] == null) {
-        return {
-          ...nestedData,
-          if (decoded['message'] != null)
-            'message': decoded['message'],
-        };
-      }
-
-      return decoded;
+    if (decoded is! Map<String, dynamic>) {
+      return <String, dynamic>{};
     }
 
-    return <String, dynamic>{};
+    final nestedData = decoded['data'];
+
+    if (nestedData is Map<String, dynamic>) {
+      return {
+        ...decoded,
+        ...nestedData,
+      };
+    }
+
+    return decoded;
   }
 
+  // LER A MENSAGEM DE ERRO DA API
   String? _messageFrom(Map<String, dynamic> body) {
     final message = body['message'] ?? body['error'];
 
-    return message is String && message.isNotEmpty
+    return message is String && message.trim().isNotEmpty
         ? message
         : null;
   }
 
+  // LIBERAR O CLIENTE HTTP
   void dispose() {
     _client.close();
   }

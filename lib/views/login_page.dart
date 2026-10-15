@@ -56,30 +56,6 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-
-Future<void> fazerLogout() async {
-  try {
-    await AuthService().logout();
-
-    if (!mounted) return;
-
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (context) => const LoginPage(),
-      ),
-      (route) => false,
-    );
-  } catch (e) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Erro ao sair da conta: $e'),
-      ),
-    );
-  }
-}
-
     setState(() => carregando = true);
 
     final email = emailController.text.trim().toLowerCase();
