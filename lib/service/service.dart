@@ -185,10 +185,10 @@ class AuthService {
   }
 
   // LOGOUT
-  Future<void> logout() async {
-    await _tokenService.removeToken();
-    await _tokenService.removeRefreshToken();
-  }
+Future<void> logout() async {
+  await _tokenService.removeToken();
+  await _tokenService.removeRefreshToken();
+}
 
   // REQUISIÇÕES AUTENTICADAS
   Future<Map<String, String>> getAuthHeaders() async {

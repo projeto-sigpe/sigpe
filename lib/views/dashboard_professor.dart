@@ -19,6 +19,29 @@ class _DashboardProfessorPageState extends State<DashboardProfessorPage> {
 
   int _currentIndex = 0;
 
+Future<void> fazerLogout() async {
+  try {
+    await AuthService().logout();
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (context) => const LoginPage(),
+      ),
+      (route) => false,
+    );
+  } catch (e) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Erro ao sair da conta: $e'),
+      ),
+    );
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

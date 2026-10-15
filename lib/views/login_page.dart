@@ -7,7 +7,6 @@ import 'package:sigpe/views/dashboard.dart';
 import 'package:sigpe/views/recuperacao_senha.dart';
 import 'package:sigpe/views/dashboard_professor.dart';
 
-
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -56,6 +55,30 @@ class _LoginPageState extends State<LoginPage> {
     if (!(formKey.currentState?.validate() ?? false)) {
       return;
     }
+
+
+Future<void> fazerLogout() async {
+  try {
+    await AuthService().logout();
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (context) => const LoginPage(),
+      ),
+      (route) => false,
+    );
+  } catch (e) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Erro ao sair da conta: $e'),
+      ),
+    );
+  }
+}
 
     setState(() => carregando = true);
 
