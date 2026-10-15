@@ -63,6 +63,7 @@ class _DashboardProfessorPageState extends State<DashboardProfessorPage> {
 
             // Camada clara para facilitar a leitura
             Positioned.fill(
+              // ignore: deprecated_member_use
               child: Container(color: fundo.withOpacity(0.18)),
             ),
 
