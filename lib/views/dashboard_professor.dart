@@ -19,28 +19,29 @@ class _DashboardProfessorPageState extends State<DashboardProfessorPage> {
 
   int _currentIndex = 0;
 
-Future<void> fazerLogout() async {
-  try {
-    await AuthService().logout();
+  /// Método responsável por realizar o Logout seguro
+  Future<void> fazerLogout() async {
+    try {
+      await AuthService().logout();
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (context) => const LoginPage(),
-      ),
-      (route) => false,
-    );
-  } catch (e) {
-    if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => const LoginPage(),
+        ),
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Erro ao sair da conta: $e'),
-      ),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao sair da conta: $e'),
+        ),
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -61,9 +62,12 @@ Future<void> fazerLogout() async {
             ),
 
             // Camada clara para facilitar a leitura
-            Positioned.fill(child: Container(color: fundo.withOpacity(0.18))),
+            Positioned.fill(
+              // ignore: deprecated_member_use
+              child: Container(color: fundo.withOpacity(0.18)),
+            ),
 
-            // Conteúdo
+            // Conteúdo Principal
             SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(18, 14, 18, 24),
@@ -124,6 +128,16 @@ Future<void> fazerLogout() async {
                           radius: 21,
                           backgroundColor: bege,
                           child: Icon(Icons.person, color: marrom),
+                        ),
+                        const SizedBox(width: 4),
+                        // Botão de Logout adicionado no cabeçalho
+                        IconButton(
+                          tooltip: 'Sair da conta',
+                          onPressed: fazerLogout,
+                          icon: const Icon(
+                            Icons.logout,
+                            color: marrom,
+                          ),
                         ),
                       ],
                     ),
@@ -303,10 +317,10 @@ Future<void> fazerLogout() async {
                         color: Colors.white.withOpacity(0.90),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: Column(
+                      child: const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Categorias de Bens',
                             style: TextStyle(
                               color: marrom,
@@ -314,8 +328,8 @@ Future<void> fazerLogout() async {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 18),
-                          const Row(
+                          SizedBox(height: 18),
+                          Row(
                             children: [
                               Expanded(
                                 child: _Categoria(

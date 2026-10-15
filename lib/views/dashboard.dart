@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sigpe/views/bens_page.dart';
 import 'package:sigpe/views/professores_page.dart';
+import '../service/service.dart';
+import 'login_page.dart';
 
 import '../contents/bottom_nav.dart';
 import '../contents/section_card.dart';
@@ -17,7 +19,25 @@ class _DashboardState extends State<Dashboard> {
 
   static const Color marrom = Color(0xFF4A2E1F);
   static const Color fundo = Color(0xFFF5EFE7);
+  // ignore: unused_field
   static const Color bege = Color(0xFFE9DED2);
+
+  /// Função responsável por realizar o Logout seguro conforme o requisito:
+  /// 1. Remove os tokens JWT do dispositivo
+  /// 2. Encerra a sessão
+  /// 3. Redireciona para a tela de Login limpando a pilha de navegação
+  Future<void> _fazerLogout() async {
+    final authService = AuthService();
+    await authService.logout();
+
+    if (!mounted) return;
+
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+      (route) => false,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,8 +93,7 @@ class _DashboardState extends State<Dashboard> {
               context,
               MaterialPageRoute(builder: (context) => const BensPage()),
             );
-          }
-          if (index == 2) {
+          } else if (index == 2) {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const ProfessoresPage()),
@@ -138,11 +157,13 @@ class _DashboardState extends State<Dashboard> {
 
           const Icon(Icons.notifications_none, color: Colors.white, size: 27),
 
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
 
-          const CircleAvatar(
-            backgroundColor: bege,
-            child: Icon(Icons.person, color: marrom),
+          // Botão de Logout adicionado no cabeçalho
+          IconButton(
+            tooltip: 'Sair da conta',
+            icon: const Icon(Icons.logout, color: Colors.white, size: 25),
+            onPressed: _fazerLogout,
           ),
         ],
       ),
