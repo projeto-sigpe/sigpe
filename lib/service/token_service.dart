@@ -22,6 +22,13 @@ class TokenService {
     return token != null && token.isNotEmpty;
   }
 
+  Future<void> clearTokens() async {
+  final prefs = await SharedPreferences.getInstance();
+
+  await prefs.remove('jwt_token');
+  await prefs.remove('refresh_token');
+}
+
   // Remove o JWT no logout
   Future<void> removeToken() async {
     final prefs = await SharedPreferences.getInstance();

@@ -27,22 +27,20 @@ class AuthResponse {
     final user = json['user'];
     final userData = user is Map<String, dynamic>
         ? user
-        : const <String, dynamic>{};
+        : <String, dynamic>{};
 
     return AuthResponse(
-      accessToken: _readString(json, const [
+      accessToken: _readString(json, [
         'access_token',
         'accessToken',
         'token',
       ]),
-      refreshToken: _readString(json, const [
+      refreshToken: _readString(json, [
         'refresh_token',
         'refreshToken',
       ]),
-      role: _readString(json, const [
-            'role',
-          ]) ??
-          _readString(userData, const ['role']),
+      role: _readString(json, ['role']) ??
+          _readString(userData, ['role']),
       data: json,
     );
   }
@@ -76,7 +74,6 @@ class AuthException implements Exception {
 class AuthService {
   final http.Client _client;
   final String baseUrl;
-
   final TokenService _tokenService = TokenService();
 
   AuthService({
@@ -84,7 +81,7 @@ class AuthService {
     this.baseUrl = ApiConfig.baseUrl,
   }) : _client = client ?? http.Client();
 
-  // LOGIN: autentica e salva os tokens
+  // LOGIN
   Future<AuthResponse> login({
     required String email,
     required String password,
@@ -108,45 +105,47 @@ class AuthService {
 
       final body = _decodeBody(response.body);
 
-      switch (response.statusCode) {
-        case 200:
-          final authResponse = AuthResponse.fromJson(body);
+      if (response.statusCode == 200 ||
+          response.statusCode == 201) {
+        final authResponse = AuthResponse.fromJson(body);
 
-          // Salva o JWT quando a API retornar o token
-          final accessToken = authResponse.accessToken;
+        final accessToken = authResponse.accessToken;
 
-          if (accessToken != null && accessToken.isNotEmpty) {
-            await _tokenService.saveToken(accessToken);
-          }
-
-          // Salva o refresh token, se a API fornecer
-          final refreshToken = authResponse.refreshToken;
-
-          if (refreshToken != null && refreshToken.isNotEmpty) {
-            await _tokenService.saveRefreshToken(refreshToken);
-          }
-
-          return authResponse;
-
-        case 401:
+        if (accessToken == null || accessToken.isEmpty) {
           throw const AuthException(
-            'E-mail ou senha inválidos.',
-            statusCode: 401,
+            'Login realizado, mas a API não retornou o JWT esperado.',
           );
+        }
 
-        case 403:
-          throw const AuthException(
-            'Acesso negado para este usuário.',
-            statusCode: 403,
-          );
+        await _tokenService.saveToken(accessToken);
 
-        default:
-          throw AuthException(
-            _messageFrom(body) ??
-                'Não foi possível realizar o login.',
-            statusCode: response.statusCode,
-          );
+        final refreshToken = authResponse.refreshToken;
+
+        if (refreshToken != null && refreshToken.isNotEmpty) {
+          await _tokenService.saveRefreshToken(refreshToken);
+        }
+
+        return authResponse;
       }
+
+      if (response.statusCode == 401) {
+        throw const AuthException(
+          'E-mail ou senha inválidos.',
+          statusCode: 401,
+        );
+      }
+
+      if (response.statusCode == 403) {
+        throw const AuthException(
+          'Acesso negado para este usuário.',
+          statusCode: 403,
+        );
+      }
+
+      throw AuthException(
+        _messageFrom(body) ?? 'Não foi possível realizar o login.',
+        statusCode: response.statusCode,
+      );
     } on AuthException {
       rethrow;
     } on TimeoutException {
@@ -158,6 +157,10 @@ class AuthService {
         'Não foi possível conectar ao servidor. '
         'Verifique a API e sua rede.',
       );
+    } on FormatException {
+      throw const AuthException(
+        'A resposta do servidor está em um formato inválido.',
+      );
     } catch (_) {
       throw const AuthException(
         'Não foi possível concluir o login. '
@@ -166,25 +169,41 @@ class AuthService {
     }
   }
 
-  // Recupera o JWT salvo
+  // RECUPERAR JWT
   Future<String?> getToken() async {
     return _tokenService.getToken();
   }
 
-  // Verifica se existe um JWT salvo
+  // VERIFICAR SESSÃO LOCAL
   Future<bool> hasSession() async {
     return _tokenService.hasToken();
   }
 
-  // Encerra a sessão local e remove os tokens
+  // RECUPERAR REFRESH TOKEN
+  Future<String?> getRefreshToken() async {
+    return _tokenService.getRefreshToken();
+  }
+
+  // LOGOUT
   Future<void> logout() async {
     await _tokenService.removeToken();
     await _tokenService.removeRefreshToken();
   }
 
-  // Fecha o cliente HTTP quando não for mais necessário
-  void dispose() {
-    _client.close();
+  // REQUISIÇÕES AUTENTICADAS
+  Future<Map<String, String>> getAuthHeaders() async {
+    final token = await _tokenService.getToken();
+
+    if (token == null || token.isEmpty) {
+      throw const AuthException(
+        'Sessão não encontrada. Faça login novamente.',
+      );
+    }
+
+    return {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
   }
 
   Map<String, dynamic> _decodeBody(String body) {
@@ -192,15 +211,27 @@ class AuthService {
       return <String, dynamic>{};
     }
 
-    try {
-      final decoded = jsonDecode(body);
+    final decoded = jsonDecode(body);
 
-      return decoded is Map<String, dynamic>
-          ? decoded
-          : <String, dynamic>{};
-    } on FormatException {
-      return <String, dynamic>{};
+    if (decoded is Map<String, dynamic>) {
+      // Aceita também respostas com os dados dentro de "data".
+      final nestedData = decoded['data'];
+
+      if (nestedData is Map<String, dynamic> &&
+          decoded['access_token'] == null &&
+          decoded['accessToken'] == null &&
+          decoded['token'] == null) {
+        return {
+          ...nestedData,
+          if (decoded['message'] != null)
+            'message': decoded['message'],
+        };
+      }
+
+      return decoded;
     }
+
+    return <String, dynamic>{};
   }
 
   String? _messageFrom(Map<String, dynamic> body) {
@@ -209,5 +240,9 @@ class AuthService {
     return message is String && message.isNotEmpty
         ? message
         : null;
+  }
+
+  void dispose() {
+    _client.close();
   }
 }

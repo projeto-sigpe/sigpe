@@ -7,6 +7,7 @@ import 'package:sigpe/views/dashboard.dart';
 import 'package:sigpe/views/recuperacao_senha.dart';
 import 'package:sigpe/views/dashboard_professor.dart';
 
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
