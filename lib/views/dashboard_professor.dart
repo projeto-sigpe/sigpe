@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:sigpe/contents/professor_bottom_nav.dart';
 import 'package:sigpe/views/bens_professor.dart';
 import 'package:sigpe/views/perfil_professor_page.dart';
+import 'package:sigpe/service/service.dart';
+import 'package:sigpe/views/login_page.dart';
 
 class DashboardProfessorPage extends StatefulWidget {
   const DashboardProfessorPage({super.key});
