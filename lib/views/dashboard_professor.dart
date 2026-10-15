@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:sigpe/contents/professor_bottom_nav.dart';
 import 'package:sigpe/views/bens_professor.dart';
 import 'package:sigpe/views/perfil_professor_page.dart';
+import 'package:sigpe/service/service.dart';
+import 'package:sigpe/views/login_page.dart';
 
 class DashboardProfessorPage extends StatefulWidget {
   const DashboardProfessorPage({super.key});
@@ -16,6 +18,29 @@ class _DashboardProfessorPageState extends State<DashboardProfessorPage> {
   static const Color bege = Color(0xFFE9DED2);
 
   int _currentIndex = 0;
+
+Future<void> fazerLogout() async {
+  try {
+    await AuthService().logout();
+
+    if (!mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (context) => const LoginPage(),
+      ),
+      (route) => false,
+    );
+  } catch (e) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Erro ao sair da conta: $e'),
+      ),
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {

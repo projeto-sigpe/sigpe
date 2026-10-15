@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+
+import 'token_service.dart';
 
 class ApiConfig {
   static const String baseUrl = 'http://localhost:8081';
@@ -23,20 +26,12 @@ class AuthResponse {
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
     final user = json['user'];
-    final userData = user is Map<String, dynamic>
-        ? user
-        : const <String, dynamic>{};
+    final userData = user is Map<String, dynamic> ? user : <String, dynamic>{};
 
     return AuthResponse(
-      accessToken: _readString(json, const [
-        'access_token',
-        'accessToken',
-        'token',
-      ]),
-      refreshToken: _readString(json, const ['refresh_token', 'refreshToken']),
-      role:
-          _readString(json, const ['role']) ??
-          _readString(userData, const ['role']),
+      accessToken: _readString(json, ['access_token', 'accessToken', 'token']),
+      refreshToken: _readString(json, ['refresh_token', 'refreshToken']),
+      role: _readString(json, ['role']) ?? _readString(userData, ['role']),
       data: json,
     );
   }
@@ -44,10 +39,12 @@ class AuthResponse {
   static String? _readString(Map<String, dynamic> json, List<String> keys) {
     for (final key in keys) {
       final value = json[key];
-      if (value is String && value.isNotEmpty) {
+
+      if (value is String && value.trim().isNotEmpty) {
         return value;
       }
     }
+
     return null;
   }
 }
@@ -65,10 +62,16 @@ class AuthException implements Exception {
 class AuthService {
   final http.Client _client;
   final String baseUrl;
+  final TokenService _tokenService;
 
-  AuthService({http.Client? client, this.baseUrl = ApiConfig.baseUrl})
-    : _client = client ?? http.Client();
+  AuthService({
+    http.Client? client,
+    TokenService? tokenService,
+    this.baseUrl = ApiConfig.baseUrl,
+  })  : _client = client ?? http.Client(),
+        _tokenService = tokenService ?? TokenService();
 
+  // LOGIN
   Future<AuthResponse> login({
     required String email,
     required String password,
@@ -89,55 +92,140 @@ class AuthService {
 
       final body = _decodeBody(response.body);
 
-      switch (response.statusCode) {
-        case 200:
-          return AuthResponse.fromJson(body);
-        case 401:
-          throw const AuthException(
-            'E-mail ou senha inválidos.',
-            statusCode: 401,
-          );
-        case 403:
-          throw const AuthException(
-            'Acesso negado para este usuário.',
-            statusCode: 403,
-          );
-        default:
-          throw AuthException(
-            _messageFrom(body) ?? 'Não foi possível realizar o login.',
-            statusCode: response.statusCode,
-          );
+      // credenciais inválidas
+      if (response.statusCode == 401) {
+        throw const AuthException(
+          'e-mail ou senha inválidos.',
+          statusCode: 401,
+        );
       }
+
+      // acesso negado
+      if (response.statusCode == 403) {
+        throw const AuthException(
+          'acesso negado para este usuário.',
+          statusCode: 403,
+        );
+      }
+
+      // login realizado com sucesso
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final authResponse = AuthResponse.fromJson(body);
+        final accessToken = authResponse.accessToken;
+
+        if (accessToken == null || accessToken.isEmpty) {
+          throw const AuthException(
+            'a api não retornou o token de acesso esperado.',
+          );
+        }
+
+        await _tokenService.saveToken(accessToken);
+        debugPrint('login: token de acesso salvo com sucesso.');
+
+        final refreshToken = authResponse.refreshToken;
+
+        if (refreshToken != null && refreshToken.isNotEmpty) {
+          await _tokenService.saveRefreshToken(refreshToken);
+          debugPrint('login: refresh token salvo com sucesso.');
+        }
+
+        return authResponse;
+      }
+
+      throw AuthException(
+        _messageFrom(body) ?? 'não foi possível realizar o login.',
+        statusCode: response.statusCode,
+      );
     } on AuthException {
       rethrow;
     } on TimeoutException {
-      throw const AuthException('A conexão com o servidor expirou.');
+      throw const AuthException(
+        'tempo limite de conexão excedido. tente novamente.',
+      );
     } on http.ClientException {
       throw const AuthException(
-        'Não foi possível conectar ao servidor. Verifique a API e sua rede.',
+        'não foi possível conectar ao servidor. verifique se a api está funcionando.',
       );
-    } catch (_) {
+    } on FormatException {
       throw const AuthException(
-        'Não foi possível conectar ao servidor. Verifique a API e sua rede.',
+        'a resposta do servidor está em um formato inválido.',
+      );
+    } catch (e) {
+      debugPrint('erro interno durante o login: $e');
+
+      throw const AuthException(
+        'não foi possível concluir o login. verifique a conexão e tente novamente.',
       );
     }
   }
 
+  // RECUPERAR TOKEN
+  Future<String?> getToken() async {
+    return _tokenService.getToken();
+  }
+
+  // VERIFICAR SE EXISTE UMA SESSÃO
+  Future<bool> hasSession() async {
+    return _tokenService.hasToken();
+  }
+
+  // RECUPERAR REFRESH TOKEN
+  Future<String?> getRefreshToken() async {
+    return _tokenService.getRefreshToken();
+  }
+
+  // ENCERRAR SESSÃO
+  Future<void> logout() async {
+    await _tokenService.removeToken();
+    await _tokenService.removeRefreshToken();
+
+    debugPrint('logout: tokens removidos.');
+  }
+
+  // CABEÇALHOS PARA REQUISIÇÕES AUTENTICADAS
+  Future<Map<String, String>> getAuthHeaders() async {
+    final token = await _tokenService.getToken();
+
+    if (token == null || token.trim().isEmpty) {
+      throw const AuthException('sessão não encontrada. faça login novamente.');
+    }
+
+    return {
+      'Accept': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
+  }
+
+  // CONVERTER A RESPOSTA DA API EM JSON
   Map<String, dynamic> _decodeBody(String body) {
     if (body.trim().isEmpty) {
       return <String, dynamic>{};
     }
 
-    try {
-      final decoded = jsonDecode(body);
-      return decoded is Map<String, dynamic> ? decoded : <String, dynamic>{};
-    } on FormatException {
+    final decoded = jsonDecode(body);
+
+    if (decoded is! Map<String, dynamic>) {
       return <String, dynamic>{};
     }
+
+    final nestedData = decoded['data'];
+
+    if (nestedData is Map<String, dynamic>) {
+      return {...decoded, ...nestedData};
+    }
+
+    return decoded;
   }
 
+  // LER A MENSAGEM DE ERRO DA API
   String? _messageFrom(Map<String, dynamic> body) {
     final message = body['message'] ?? body['error'];
-    return message is String && message.isNotEmpty ? message : null;
+
+    return message is String && message.trim().isNotEmpty ? message : null;
+  }
+
+  // LIBERAR O CLIENTE HTTP
+  void dispose() {
+    _client.close();
   }
 }
