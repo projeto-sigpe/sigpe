@@ -1,40 +1,30 @@
-
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sigpe/service/token_service.dart';
-
-class MockFlutterSecureStorage extends Mock
-    implements FlutterSecureStorage {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  late MockFlutterSecureStorage storage;
+  test('Testar se Salva, Recupera, Verifica e Remove o Token', () async {
+    // 1. Simula a memória limpa do telemóvel/PC
+    SharedPreferences.setMockInitialValues({});
+    final tokenService = TokenService();
 
-  setUp(() {
-    storage = MockFlutterSecureStorage();
-  });
+    // TESTE 1: Salvar e Recuperar (Continuar logado)
+    await tokenService.saveToken('token_123');
+    final tokenGuardado = await tokenService.getToken();
+    print('Token recuperado: $tokenGuardado'); // Deve imprimir: token_123
+    expect(tokenGuardado, 'token_123');
 
-  test('TokenService deve salvar o token', () async {
-    when(
-      () => storage.write(
-        key: 'jwt_token',
-        value: 'jwt_teste',
-      ),
-    ).thenAnswer((_) async {});
+    // TESTE 2: Verificar se existe sessão
+    final temSessao = await tokenService.hasToken();
+    print('Tem sessão ativa? $temSessao'); // Deve imprimir: true
+    expect(temSessao, isTrue);
 
-    // este teste verifica o comportamento esperado.
-    await storage.write(
-      key: 'jwt_token',
-      value: 'jwt_teste',
-    );
-
-    verify(
-      () => storage.write(
-        key: 'jwt_token',
-        value: 'jwt_teste',
-      ),
-    ).called(1);
+    // TESTE 3: Sair (Remover Token)
+    await tokenService.removeToken();
+    final temSessaoAposLogout = await tokenService.hasToken();
+    print('Tem sessão após logout? $temSessaoAposLogout'); // Deve imprimir: false
+    expect(temSessaoAposLogout, isFalse);
   });
 }
