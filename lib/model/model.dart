@@ -42,7 +42,7 @@ class Equipamento {
   }
 }
 
-class Administrativo{
+class Administrativo {
   final String email;
   final String nome;
   final String password;
@@ -50,15 +50,13 @@ class Administrativo{
   final String telefone;
   final String cpf;
 
-
   Administrativo({
     required this.email,
     required this.password,
     required this.nome,
     required this.departamento,
     required this.telefone,
-    required this.cpf
-    
+    required this.cpf,
   });
 
   factory Administrativo.fromJson(Map<String, dynamic> json) {
@@ -68,14 +66,12 @@ class Administrativo{
       nome: json['nome'],
       departamento: json['departamento'],
       telefone: json['telefone'],
-      cpf: json['cpf']
-     
-
+      cpf: json['cpf'],
     );
   }
 }
 
-class Professores{
+class Professores {
   final String nome;
   final String email;
   final String password;
@@ -102,7 +98,7 @@ class Professores{
       matricula: json['matricula'],
       departamento: json['departamento'],
       telefone: json['telefone'],
-      cpf: json['cpf']
+      cpf: json['cpf'],
     );
   }
 }
