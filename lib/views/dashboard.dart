@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sigpe/views/bens_page.dart';
 import 'package:sigpe/views/professores_page.dart';
+import 'package:sigpe/routes/app_routes.dart';
 import '../service/service.dart';
-import 'login_page.dart';
 
 import '../contents/bottom_nav.dart';
 import '../contents/section_card.dart';
@@ -32,9 +32,9 @@ class _DashboardState extends State<Dashboard> {
 
     if (!mounted) return;
 
-    Navigator.pushAndRemoveUntil(
+    Navigator.pushNamedAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => const LoginPage()),
+      AppRoutes.login,
       (route) => false,
     );
   }

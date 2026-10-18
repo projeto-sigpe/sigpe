@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:sigpe/views/cadastro_page.dart';
 import 'package:sigpe/contents/app_button.dart';
 import 'package:sigpe/contents/app_text.dart';
+import 'package:sigpe/routes/app_routes.dart';
 import 'package:sigpe/service/service.dart';
-import 'package:sigpe/views/dashboard.dart';
-import 'package:sigpe/views/recuperacao_senha.dart';
-import 'package:sigpe/views/dashboard_professor.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -66,18 +63,10 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
 
       if (email == 'admin@admin.com') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const Dashboard()),
-        );
+        Navigator.pushReplacementNamed(context, AppRoutes.admin);
       } else if (email == 'professor@escola.com' ||
           email == 'maria.silva@escola.com') {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const DashboardProfessorPage(),
-          ),
-        );
+        Navigator.pushReplacementNamed(context, AppRoutes.professor);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Perfil de usuário não reconhecido.')),
@@ -172,12 +161,7 @@ class _LoginPageState extends State<LoginPage> {
                 Center(
                   child: TextButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const RecuperarSenhaPage(),
-                        ),
-                      );
+                      Navigator.pushNamed(context, AppRoutes.recuperarSenha);
                     },
                     child: const Text(
                       'Esqueceu sua senha?',
@@ -200,12 +184,7 @@ class _LoginPageState extends State<LoginPage> {
 
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const Cadastro(),
-                            ),
-                          );
+                          Navigator.pushNamed(context, AppRoutes.cadastro);
                         },
 
                         child: const Text(

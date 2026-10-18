@@ -1,11 +1,10 @@
 import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
-import 'package:sigpe/views/home.dart';
+import 'package:sigpe/routes/app_routes.dart';
 
-void main(){
+void main() {
   runApp(DevicePreview(builder: (context) => App()));
 }
-
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -15,8 +14,8 @@ class App extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'SIGPE',
-      home: const Home(),
+      initialRoute: AppRoutes.home,
+      routes: AppRoutes.routes,
     );
   }
 }
-

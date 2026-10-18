@@ -3,7 +3,7 @@ import 'package:sigpe/contents/professor_bottom_nav.dart';
 import 'package:sigpe/views/bens_professor.dart';
 import 'package:sigpe/views/perfil_professor_page.dart';
 import 'package:sigpe/service/service.dart';
-import 'package:sigpe/views/login_page.dart';
+import 'package:sigpe/routes/app_routes.dart';
 
 class DashboardProfessorPage extends StatefulWidget {
   const DashboardProfessorPage({super.key});
@@ -26,20 +26,15 @@ class _DashboardProfessorPageState extends State<DashboardProfessorPage> {
 
       if (!mounted) return;
 
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (context) => const LoginPage(),
-        ),
-        (route) => false,
-      );
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(AppRoutes.login, (route) => false);
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao sair da conta: $e'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao sair da conta: $e')));
     }
   }
 
@@ -134,10 +129,7 @@ class _DashboardProfessorPageState extends State<DashboardProfessorPage> {
                         IconButton(
                           tooltip: 'Sair da conta',
                           onPressed: fazerLogout,
-                          icon: const Icon(
-                            Icons.logout,
-                            color: marrom,
-                          ),
+                          icon: const Icon(Icons.logout, color: marrom),
                         ),
                       ],
                     ),
