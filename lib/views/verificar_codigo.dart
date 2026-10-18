@@ -1,8 +1,8 @@
 
 import 'package:flutter/material.dart';
+import 'package:sigpe/routes/app_routes.dart';
 import 'package:sigpe/contents/app_button.dart';
 import 'package:sigpe/contents/app_text.dart';
-import 'package:sigpe/views/nova_senha.dart';
 
 class VerificarCodigoPage extends StatefulWidget {
   const VerificarCodigoPage({super.key});
@@ -113,13 +113,7 @@ class _VerificarCodigoPageState
                     AppButton(
                       texto: 'Continuar',
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const NovaSenhaPage(),
-                          ),
-                        );
+                        Navigator.pushNamed(context, AppRoutes.novaSenha);
                       },
                     ),
 

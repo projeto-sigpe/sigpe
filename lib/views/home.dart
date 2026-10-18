@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:sigpe/views/login_page.dart';
+import 'package:sigpe/routes/app_routes.dart';
 
 
 class Home extends StatelessWidget {
@@ -57,12 +57,7 @@ class Home extends StatelessWidget {
                   height: 55,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginPage(),
-                        ),
-                      );
+                      Navigator.pushNamed(context, AppRoutes.login);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,

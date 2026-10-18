@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:sigpe/contents/app_text.dart';
 import 'package:sigpe/contents/app_password.dart';
 import 'package:sigpe/contents/app_button.dart';
+import 'package:sigpe/routes/app_routes.dart';
 
 class Cadastro extends StatefulWidget {
   const Cadastro({super.key});
@@ -96,7 +97,7 @@ class _CadastroState extends State<Cadastro> {
                 // BOTÃO VOLTAR
                 IconButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pushReplacementNamed(context, AppRoutes.login);
                   },
                   icon: const Icon(Icons.arrow_back, color: Color(0xFF3B2417)),
                 ),
@@ -192,7 +193,7 @@ class _CadastroState extends State<Cadastro> {
                 Center(
                       child: TextButton(
                         onPressed: () {
-                          Navigator.pop(context);
+                          Navigator.pushReplacementNamed(context, AppRoutes.login);
                         },
 
                         child: const Text(

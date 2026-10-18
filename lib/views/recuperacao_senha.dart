@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:sigpe/views/verificar_codigo.dart';
 
 import '../contents/app_button.dart';
 import '../contents/app_text.dart';
+import '../routes/app_routes.dart';
 
 
 class RecuperarSenhaPage extends StatefulWidget {
@@ -109,13 +109,7 @@ class _RecuperarSenhaPageState extends State<RecuperarSenhaPage> {
                     AppButton(
                       texto: 'Enviar código',
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                const VerificarCodigoPage(),
-                          ),
-                        );
+                        Navigator.pushNamed(context, AppRoutes.verificarCodigo);
                       },
                     ),
 
@@ -124,7 +118,7 @@ class _RecuperarSenhaPageState extends State<RecuperarSenhaPage> {
                     // VOLTAR PARA LOGIN
                     TextButton(
                       onPressed: () {
-                        Navigator.pop(context);
+                        Navigator.pushReplacementNamed(context, AppRoutes.login);
                       },
                       child: const Text(
                         'Voltar para o login',
