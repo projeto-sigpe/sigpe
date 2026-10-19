@@ -103,7 +103,7 @@ class AuthService {
       // acesso negado
       if (response.statusCode == 403) {
         throw const AuthException(
-          'acesso negado para este usuÃƒÆ’Ã‚Â¡rio.',
+          'acesso negado para este usuario.',
           statusCode: 403,
         );
       }
@@ -115,7 +115,7 @@ class AuthService {
 
         if (accessToken == null || accessToken.isEmpty) {
           throw const AuthException(
-            'a api nÃƒÆ’Ã‚Â£o retornou o token de acesso esperado.',
+            'a api nao retornou o token de acesso esperado.',
           );
         }
 
@@ -145,17 +145,17 @@ class AuthService {
       );
     } on http.ClientException {
       throw const AuthException(
-        'nÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel conectar ao servidor. verifique se a api estÃƒÆ’Ã‚Â¡ funcionando.',
+        'nao foi possivel conectar ao servidor. verifique se a api esta funcionando.',
       );
     } on FormatException {
       throw const AuthException(
-        'a resposta do servidor estÃƒÆ’Ã‚Â¡ em um formato invÃƒÆ’Ã‚Â¡lido.',
+        'a resposta do servidor esta em um formato invalido.',
       );
     } catch (e) {
       debugPrint('erro interno durante o login: $e');
 
       throw const AuthException(
-        'nÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel concluir o login. verifique a conexÃƒÆ’Ã‚Â£o e tente novamente.',
+        'nao foi possivel concluir o login. verifique a conexao e tente novamente.',
       );
     }
   }
@@ -191,22 +191,20 @@ class AuthService {
 
       if (response.statusCode == 409) {
         throw const AuthException(
-          'este e-mail jÃƒÆ’Ã‚Â¡ estÃƒÆ’Ã‚Â¡ cadastrado.',
+          'este e-mail ja esta cadastrado.',
           statusCode: 409,
         );
       }
 
       if (response.statusCode == 400) {
         throw AuthException(
-          _messageFrom(body) ??
-              'os dados do cadastro sÃƒÆ’Ã‚Â£o invÃƒÆ’Ã‚Â¡lidos.',
+          _messageFrom(body) ?? 'os dados do cadastro sao invalidos.',
           statusCode: 400,
         );
       }
 
       throw AuthException(
-        _messageFrom(body) ??
-            'nÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel realizar o cadastro.',
+        _messageFrom(body) ?? 'nao foi possivel realizar o cadastro.',
         statusCode: response.statusCode,
       );
     } on AuthException {
@@ -266,6 +264,65 @@ class AuthService {
     } on FormatException {
       throw const AuthException(
         'a resposta do servidor estÃƒÆ’Ã‚Â¡ em um formato invÃƒÆ’Ã‚Â¡lido.',
+      );
+    }
+  }
+
+  // CADASTRAR PROFESSOR (SOMENTE ADMINISTRADOR)
+  Future<void> cadastrarProfessor({
+    required String nome,
+    required String email,
+    required String password,
+    required String matricula,
+    required String departamento,
+  }) async {
+    final uri = Uri.parse('$baseUrl/api/admin/professores');
+
+    try {
+      final response = await _client
+          .post(
+            uri,
+            headers: {
+              ...await getAuthHeaders(),
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'nome': nome,
+              'email': email,
+              'password': password,
+              'matricula': matricula,
+              'departamento': departamento,
+            }),
+          )
+          .timeout(ApiConfig.requestTimeout);
+
+      final body = _decodeBody(response.body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint('Professor cadastrado com sucesso.');
+        return;
+      }
+
+      if (response.statusCode == 409) {
+        throw const AuthException(
+          'Este e-mail ou matrícula já está cadastrado.',
+          statusCode: 409,
+        );
+      }
+
+      throw AuthException(
+        _messageFrom(body) ?? 'Não foi possível cadastrar o professor.',
+        statusCode: response.statusCode,
+      );
+    } on AuthException {
+      rethrow;
+    } on TimeoutException {
+      throw const AuthException('Tempo limite excedido. Tente novamente.');
+    } on http.ClientException {
+      throw const AuthException('Não foi possível conectar ao servidor.');
+    } on FormatException {
+      throw const AuthException(
+        'A resposta do servidor está em formato inválido.',
       );
     }
   }
