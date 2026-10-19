@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sigpe/service/service.dart';
 
 class AtribuirBensPage extends StatefulWidget {
   final Map<String, String> bem;
@@ -13,14 +14,37 @@ class _AtribuirBensPageState extends State<AtribuirBensPage> {
   final _formKey = GlobalKey<FormState>();
   final _observacoesController = TextEditingController();
 
-  String? _professorSelecionado;
+  int? _professorSelecionado;
+  final AuthService _authService = AuthService();
+  List<Map<String, dynamic>> _professores = [];
+  bool _carregando = true;
+  bool _salvando = false;
 
-  final List<String> _professores = [
-    'Ana Souza',
-    'Carlos Oliveira',
-    'Juliana Lima',
-    'Marcos Santos',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _carregarProfessores();
+  }
+
+  Future<void> _carregarProfessores() async {
+    try {
+      final professores = await _authService.getProfessores();
+      if (mounted)
+        setState(() {
+          _professores = professores;
+          _carregando = false;
+        });
+    } on AuthException catch (error) {
+      if (mounted) {
+        setState(() {
+          _carregando = false;
+        });
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -89,7 +113,7 @@ class _AtribuirBensPageState extends State<AtribuirBensPage> {
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(color: const Color(0xFFE8DED3)),
                         ),
-                        child: DropdownButtonFormField<String>(
+                        child: DropdownButtonFormField<int>(
                           value: _professorSelecionado,
                           isExpanded: true,
                           decoration: const InputDecoration(
@@ -97,9 +121,9 @@ class _AtribuirBensPageState extends State<AtribuirBensPage> {
                             hintText: 'Selecione um professor',
                           ),
                           items: _professores.map((professor) {
-                            return DropdownMenuItem<String>(
-                              value: professor,
-                              child: Text(professor),
+                            return DropdownMenuItem<int>(
+                              value: professor['id'] as int,
+                              child: Text(professor['nome']?.toString() ?? '-'),
                             );
                           }).toList(),
                           onChanged: (valor) {
@@ -156,7 +180,9 @@ class _AtribuirBensPageState extends State<AtribuirBensPage> {
                         width: double.infinity,
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: _atribuirBem,
+                          onPressed: _salvando || _carregando
+                              ? null
+                              : _atribuirBem,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF5A3824),
                             foregroundColor: Colors.white,
@@ -165,8 +191,8 @@ class _AtribuirBensPageState extends State<AtribuirBensPage> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          child: const Text(
-                            'Confirmar atribuição',
+                          child: Text(
+                            _salvando ? 'Salvando...' : 'Confirmar atribuição',
                             style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -236,20 +262,28 @@ class _AtribuirBensPageState extends State<AtribuirBensPage> {
     );
   }
 
-  void _atribuirBem() {
+  Future<void> _atribuirBem() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    Navigator.pop(context, {
-      'professor': _professorSelecionado!,
-      'observacoes': _observacoesController.text.trim(),
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Atribuição registrada nesta demonstração.'),
-      ),
-    );
+    final id = int.tryParse(widget.bem['id'] ?? '');
+    if (id == null || _professorSelecionado == null) return;
+    setState(() => _salvando = true);
+    try {
+      await _authService.assignPatrimonio(
+        id,
+        professorId: _professorSelecionado!,
+        observacoes: _observacoesController.text.trim(),
+      );
+      if (mounted) Navigator.pop(context, true);
+    } on AuthException catch (error) {
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) setState(() => _salvando = false);
+    }
   }
 }

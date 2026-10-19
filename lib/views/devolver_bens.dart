@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sigpe/service/service.dart';
 
 class DevolverBensPage extends StatefulWidget {
   final Map<String, String> bem;
@@ -14,6 +15,8 @@ class _DevolverBensPageState extends State<DevolverBensPage> {
   final _motivoController = TextEditingController();
 
   String? _condicaoSelecionada;
+  final AuthService _authService = AuthService();
+  bool _salvando = false;
 
   final List<String> _condicoes = [
     'Em bom estado',
@@ -164,7 +167,7 @@ class _DevolverBensPageState extends State<DevolverBensPage> {
                         width: double.infinity,
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: _devolverBem,
+                          onPressed: _salvando ? null : _devolverBem,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF5A3824),
                             foregroundColor: Colors.white,
@@ -173,8 +176,8 @@ class _DevolverBensPageState extends State<DevolverBensPage> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          child: const Text(
-                            'Confirmar devolução',
+                          child: Text(
+                            _salvando ? 'Salvando...' : 'Confirmar devolução',
                             style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -244,21 +247,27 @@ class _DevolverBensPageState extends State<DevolverBensPage> {
     );
   }
 
-  void _devolverBem() {
+  Future<void> _devolverBem() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    Navigator.pop(context, {
-      'condicao': _condicaoSelecionada!,
-      'motivo': _motivoController.text.trim(),
-      'status': _condicaoSelecionada == 'Necessita de manutenção'
-          ? 'Manutenção'
-          : 'Disponível',
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Devolução registrada nesta demonstração.')),
-    );
+    final id = int.tryParse(widget.bem['id'] ?? '');
+    if (id == null) return;
+    setState(() => _salvando = true);
+    try {
+      await _authService.unassignPatrimonio(
+        id,
+        motivo: _motivoController.text.trim(),
+      );
+      if (mounted) Navigator.pop(context, true);
+    } on AuthException catch (error) {
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) setState(() => _salvando = false);
+    }
   }
 }

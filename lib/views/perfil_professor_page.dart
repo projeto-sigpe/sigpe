@@ -3,6 +3,7 @@ import 'package:sigpe/contents/professor_bottom_nav.dart';
 import 'package:sigpe/views/bens_professor.dart';
 import 'package:sigpe/views/dashboard_professor.dart';
 import 'package:sigpe/views/editar_perfil_professor.dart';
+import 'package:sigpe/service/service.dart';
 
 class PerfilProfessorPage extends StatefulWidget {
   const PerfilProfessorPage({super.key});
@@ -17,11 +18,37 @@ class _PerfilProfessorPageState extends State<PerfilProfessorPage> {
   static const Color texto = Color(0xFF75685D);
   static const Color borda = Color(0xFFE8DED2);
 
-  String nome = 'Carlos Drummond';
-  String email = 'professor@escola.com';
-  String telefone = '(11) 98765-4321';
-  String matricula = 'PROF-2024-01';
-  String departamento = 'Língua Portuguesa e Literatura';
+  final AuthService _authService = AuthService();
+  String nome = '-';
+  String email = '-';
+  String telefone = '-';
+  String matricula = '-';
+  String departamento = '-';
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarPerfil();
+  }
+
+  Future<void> _carregarPerfil() async {
+    try {
+      final perfil = await _authService.getProfile();
+      if (!mounted) return;
+      setState(() {
+        nome = perfil['nome']?.toString() ?? nome;
+        email = perfil['email']?.toString() ?? email;
+        telefone = perfil['telefone']?.toString() ?? telefone;
+        matricula = perfil['matricula']?.toString() ?? matricula;
+        departamento = perfil['departamento']?.toString() ?? departamento;
+      });
+    } on AuthException catch (error) {
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+    }
+  }
 
   Future<void> _editarPerfil() async {
     final resultado = await Navigator.push<Map<String, String>>(
@@ -43,9 +70,18 @@ class _PerfilProfessorPageState extends State<PerfilProfessorPage> {
       telefone = resultado['telefone'] ?? telefone;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Perfil atualizado com sucesso!')),
-    );
+    try {
+      await _authService.updateProfile(resultado);
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Perfil atualizado com sucesso!')),
+        );
+    } on AuthException catch (error) {
+      if (mounted)
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+    }
   }
 
   void _alterarSenha() {

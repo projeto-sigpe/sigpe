@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sigpe/contents/app_search.dart';
 import 'package:sigpe/contents/bottom_nav.dart';
 import 'package:sigpe/contents/professor_card.dart';
+import 'package:sigpe/service/service.dart';
 import 'package:sigpe/views/perfil_professores.dart';
 
 class ProfessoresPage extends StatefulWidget {
@@ -14,33 +15,34 @@ class ProfessoresPage extends StatefulWidget {
 class _ProfessoresPageState extends State<ProfessoresPage> {
   int _currentIndex = 2;
   String _busca = '';
+  final AuthService _authService = AuthService();
+  List<Map<String, dynamic>> professores = [];
+  bool _carregando = true;
+  String? _erro;
 
-  final List<Map<String, dynamic>> professores = [
-    {
-      'nome': 'Ana Souza',
-      'disciplina': 'Matemática',
-      'matricula': '2345',
-      'quantidadeBens': 3,
-    },
-    {
-      'nome': 'Carlos Oliveira',
-      'disciplina': 'História',
-      'matricula': '1987',
-      'quantidadeBens': 2,
-    },
-    {
-      'nome': 'Juliana Lima',
-      'disciplina': 'Biologia',
-      'matricula': '1765',
-      'quantidadeBens': 5,
-    },
-    {
-      'nome': 'Marcos Santos',
-      'disciplina': 'Física',
-      'matricula': '2034',
-      'quantidadeBens': 1,
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _carregarProfessores();
+  }
+
+  Future<void> _carregarProfessores() async {
+    try {
+      final resultado = await _authService.getProfessores();
+      if (!mounted) return;
+      setState(() {
+        professores = resultado;
+        _erro = null;
+        _carregando = false;
+      });
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _erro = error.message;
+        _carregando = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,12 +94,16 @@ class _ProfessoresPageState extends State<ProfessoresPage> {
             const SizedBox(height: 14),
 
             Expanded(
-              child: filtrados.isEmpty
+              child: _carregando
+                  ? const Center(child: CircularProgressIndicator())
+                  : _erro != null
+                  ? Center(child: Text(_erro!))
+                  : filtrados.isEmpty
                   ? const Center(child: Text('Nenhum professor encontrado.'))
                   : ListView.separated(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                       itemCount: filtrados.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         final professor = filtrados[index];
 
@@ -107,16 +113,19 @@ class _ProfessoresPageState extends State<ProfessoresPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const PerfilProfessoresPage(),
+                                builder: (context) => PerfilProfessoresPage(
+                                  professorId: professor['id'] as int,
+                                ),
                               ),
                             );
                           },
                           child: ProfessorCard(
                             nome: professor['nome'],
-                            disciplina: professor['disciplina'],
-                            matricula: professor['matricula'],
-                            quantidadeBens: professor['quantidadeBens'],
+                            disciplina:
+                                professor['departamento']?.toString() ?? '',
+                            matricula: professor['matricula']?.toString() ?? '',
+                            quantidadeBens:
+                                professor['totalPatrimonios'] as int? ?? 0,
                           ),
                         );
                       },

@@ -1,22 +1,21 @@
-
 import 'package:flutter/material.dart';
-import 'package:sigpe/routes/app_routes.dart';
 import 'package:sigpe/contents/app_button.dart';
 import 'package:sigpe/contents/app_text.dart';
+import 'package:sigpe/service/service.dart';
+import 'package:sigpe/views/nova_senha.dart';
 
 class VerificarCodigoPage extends StatefulWidget {
-  const VerificarCodigoPage({super.key});
+  final String email;
+  const VerificarCodigoPage({super.key, this.email = ''});
 
   @override
-  State<VerificarCodigoPage> createState() =>
-      _VerificarCodigoPageState();
+  State<VerificarCodigoPage> createState() => _VerificarCodigoPageState();
 }
 
-class _VerificarCodigoPageState
-    extends State<VerificarCodigoPage> {
-
-  final TextEditingController codigoController =
-      TextEditingController();
+class _VerificarCodigoPageState extends State<VerificarCodigoPage> {
+  final TextEditingController codigoController = TextEditingController();
+  final AuthService _authService = AuthService();
+  bool _carregando = false;
 
   @override
   void dispose() {
@@ -32,17 +31,12 @@ class _VerificarCodigoPageState
       body: SafeArea(
         child: Stack(
           children: [
-
-
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 22),
 
                 child: Column(
                   children: [
-
                     // VOLTAR
                     Align(
                       alignment: Alignment.centerLeft,
@@ -111,10 +105,37 @@ class _VerificarCodigoPageState
 
                     // BOTÃO
                     AppButton(
-                      texto: 'Continuar',
-                      onPressed: () {
-                        Navigator.pushNamed(context, AppRoutes.novaSenha);
-                      },
+                      texto: _carregando ? 'Verificando...' : 'Continuar',
+                      onPressed: _carregando
+                          ? () {}
+                          : () async {
+                              setState(() => _carregando = true);
+                              try {
+                                await _authService.verifyCode(
+                                  email: widget.email,
+                                  code: codigoController.text.trim(),
+                                );
+                                if (mounted) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => NovaSenhaPage(
+                                        email: widget.email,
+                                        code: codigoController.text.trim(),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } on AuthException catch (error) {
+                                if (mounted)
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(error.message)),
+                                  );
+                              } finally {
+                                if (mounted)
+                                  setState(() => _carregando = false);
+                              }
+                            },
                     ),
 
                     const SizedBox(height: 24),

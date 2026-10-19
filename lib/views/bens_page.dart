@@ -5,6 +5,7 @@ import 'package:sigpe/views/atribuir_bens.dart';
 import 'package:sigpe/views/cadastrar_bens.dart';
 import 'package:sigpe/views/devolver_bens.dart';
 import 'package:sigpe/views/historico_bens.dart';
+import 'package:sigpe/service/service.dart';
 
 class BensPage extends StatefulWidget {
   const BensPage({super.key});
@@ -20,35 +21,46 @@ class _BensPageState extends State<BensPage> {
   String _statusSelecionado = 'Todos';
   String _categoriaSelecionada = 'Todas as categorias';
 
-  final List<Map<String, String>> _bens = [
-    {
-      'nome': 'Notebook Dell',
-      'tombo': '0001',
-      'categoria': 'Informática',
-      'local': 'Sala dos professores',
-      'status': 'Em uso',
-      'marca': 'Dell',
-      'serie': 'SN123456',
-    },
-    {
-      'nome': 'Projetor Epson',
-      'tombo': '0007',
-      'categoria': 'Audiovisual',
-      'local': 'Laboratório',
-      'status': 'Disponível',
-      'marca': 'Epson',
-      'serie': 'EP789123',
-    },
-    {
-      'nome': 'Tablet Ergonômico',
-      'tombo': '0009',
-      'categoria': 'Mobiliário',
-      'local': 'Sala 03',
-      'status': 'Manutenção',
-      'marca': 'Samsung',
-      'serie': 'SM456789',
-    },
-  ];
+  final List<Map<String, String>> _bens = [];
+  final AuthService _authService = AuthService();
+  bool _carregando = true;
+  String? _erro;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarBens();
+  }
+
+  Future<void> _carregarBens() async {
+    try {
+      final items = await _authService.getPatrimonios();
+      if (!mounted) return;
+      setState(() {
+        _bens
+          ..clear()
+          ..addAll(items.map(_mapBem));
+        _carregando = false;
+      });
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _erro = error.message;
+        _carregando = false;
+      });
+    }
+  }
+
+  Map<String, String> _mapBem(Map<String, dynamic> item) => {
+    'id': item['id']?.toString() ?? '',
+    'nome': item['nome']?.toString() ?? '-',
+    'tombo': item['codigo']?.toString() ?? '-',
+    'categoria': item['categoria']?.toString() ?? '-',
+    'local': item['localizacao']?.toString() ?? '-',
+    'status': item['status']?.toString() ?? '-',
+    'marca': item['marca']?.toString() ?? '-',
+    'serie': item['numeroSerie']?.toString() ?? '-',
+  };
 
   final List<String> _categorias = [
     'Todas as categorias',
@@ -241,18 +253,15 @@ class _BensPageState extends State<BensPage> {
                   IconButton(
                     tooltip: 'Cadastrar bem',
                     onPressed: () async {
-                      final novoBem = await Navigator.push<Map<String, String>>(
+                      final cadastrado = await Navigator.push<bool>(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const CadastrarBensPage(),
                         ),
                       );
 
-                      if (novoBem != null && mounted) {
-                        setState(() {
-                          _bens.add(novoBem);
-                        });
-
+                      if (cadastrado == true && mounted) {
+                        await _carregarBens();
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Bem cadastrado com sucesso!'),
@@ -271,157 +280,167 @@ class _BensPageState extends State<BensPage> {
             ),
 
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  // Busca
-                  TextField(
-                    onChanged: (valor) {
-                      setState(() => _busca = valor);
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Buscar bem...',
-                      prefixIcon: const Icon(
-                        Icons.search,
-                        color: Color(0xFF80634E),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE8DED3)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE8DED3)),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Filtro de status
-                  const Text(
-                    'Status',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF3B2417),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
+              child: _carregando
+                  ? const Center(child: CircularProgressIndicator())
+                  : _erro != null
+                  ? Center(child: Text(_erro!))
+                  : ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       children: [
-                        _botaoStatus('Todos', total),
-                        _botaoStatus('Em uso', emUso),
-                        _botaoStatus('Disponível', disponiveis),
-                        _botaoStatus('Manutenção', manutencao),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 18),
-
-                  // Filtro de categoria
-                  const Text(
-                    'Categoria',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF3B2417),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFE8DED3)),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _categoriaSelecionada,
-                        isExpanded: true,
-                        items: _categorias.map((categoria) {
-                          return DropdownMenuItem(
-                            value: categoria,
-                            child: Text(
-                              categoria,
-                              style: const TextStyle(fontSize: 14),
+                        // Busca
+                        TextField(
+                          onChanged: (valor) {
+                            setState(() => _busca = valor);
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'Buscar bem...',
+                            prefixIcon: const Icon(
+                              Icons.search,
+                              color: Color(0xFF80634E),
                             ),
-                          );
-                        }).toList(),
-                        onChanged: (valor) {
-                          if (valor != null) {
-                            setState(() {
-                              _categoriaSelecionada = valor;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  // Contador
-                  Text(
-                    '${_bensFiltrados.length} '
-                    '${_bensFiltrados.length == 1 ? 'bem encontrado' : 'bens encontrados'}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF80634E),
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // Lista de patrimônios
-                  if (_bensFiltrados.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 40),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.inventory_2_outlined,
-                            size: 48,
-                            color: Color(0xFF80634E),
-                          ),
-                          SizedBox(height: 12),
-                          Text(
-                            'Nenhum bem encontrado.',
-                            style: TextStyle(color: Color(0xFF80634E)),
-                          ),
-                        ],
-                      ),
-                    )
-                  else
-                    ..._bensFiltrados.map((bem) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(14),
-                          onTap: () => _mostrarOpcoesBens(bem),
-                          child: PatrimonioCard(
-                            nome: bem['nome']!,
-                            tombo: bem['tombo']!,
-                            categoria: bem['categoria']!,
-                            local: bem['local']!,
-                            status: bem['status']!,
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFE8DED3),
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFE8DED3),
+                              ),
+                            ),
                           ),
                         ),
-                      );
-                    }),
 
-                  const SizedBox(height: 16),
-                ],
-              ),
+                        const SizedBox(height: 16),
+
+                        // Filtro de status
+                        const Text(
+                          'Status',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF3B2417),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              _botaoStatus('Todos', total),
+                              _botaoStatus('Em uso', emUso),
+                              _botaoStatus('Disponível', disponiveis),
+                              _botaoStatus('Manutenção', manutencao),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        // Filtro de categoria
+                        const Text(
+                          'Categoria',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Color(0xFF3B2417),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFE8DED3)),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _categoriaSelecionada,
+                              isExpanded: true,
+                              items: _categorias.map((categoria) {
+                                return DropdownMenuItem(
+                                  value: categoria,
+                                  child: Text(
+                                    categoria,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (valor) {
+                                if (valor != null) {
+                                  setState(() {
+                                    _categoriaSelecionada = valor;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // Contador
+                        Text(
+                          '${_bensFiltrados.length} '
+                          '${_bensFiltrados.length == 1 ? 'bem encontrado' : 'bens encontrados'}',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF80634E),
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        // Lista de patrimônios
+                        if (_bensFiltrados.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 40),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.inventory_2_outlined,
+                                  size: 48,
+                                  color: Color(0xFF80634E),
+                                ),
+                                SizedBox(height: 12),
+                                Text(
+                                  'Nenhum bem encontrado.',
+                                  style: TextStyle(color: Color(0xFF80634E)),
+                                ),
+                              ],
+                            ),
+                          )
+                        else
+                          ..._bensFiltrados.map((bem) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(14),
+                                onTap: () => _mostrarOpcoesBens(bem),
+                                child: PatrimonioCard(
+                                  nome: bem['nome']!,
+                                  tombo: bem['tombo']!,
+                                  categoria: bem['categoria']!,
+                                  local: bem['local']!,
+                                  status: bem['status']!,
+                                ),
+                              ),
+                            );
+                          }),
+
+                        const SizedBox(height: 16),
+                      ],
+                    ),
             ),
           ],
         ),

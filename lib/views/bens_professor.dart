@@ -3,6 +3,7 @@ import 'package:sigpe/contents/professor_bottom_nav.dart';
 import 'package:sigpe/views/dashboard_professor.dart';
 import 'package:sigpe/views/detalhes_bens_professor.dart';
 import 'package:sigpe/views/perfil_professor_page.dart';
+import 'package:sigpe/service/service.dart';
 
 class BensProfessorPage extends StatefulWidget {
   const BensProfessorPage({super.key});
@@ -21,44 +22,51 @@ class _BensProfessorPageState extends State<BensProfessorPage> {
 
   String busca = '';
 
-  final List<Map<String, String>> bens = [
-    {
-      'nome': 'Notebook Dell',
-      'tombo': '0001',
-      'local': 'Sala 12 - Bloco A',
-      'data': '10/04/2025',
-      'status': 'Em uso',
-      'icone': 'notebook',
-      'categoria': 'Informática',
-      'marca': 'Dell',
-      'serie': 'DELL-NT-001',
-      'responsavel': 'Prof. Carlos Drummond',
-    },
-    {
-      'nome': 'Projetor Epson',
-      'tombo': '0007',
-      'local': 'Laboratório',
-      'data': '13/04/2025',
-      'status': 'Em uso',
-      'icone': 'projetor',
-      'categoria': 'Equipamento audiovisual',
-      'marca': 'Epson',
-      'serie': 'EPS-PJ-007',
-      'responsavel': 'Prof. Carlos Drummond',
-    },
-    {
-      'nome': 'Tablet Samsung',
-      'tombo': '0012',
-      'local': 'Sala 08 - Bloco B',
-      'data': '20/04/2025',
-      'status': 'Em uso',
-      'icone': 'tablet',
-      'categoria': 'Informática',
-      'marca': 'Samsung',
-      'serie': 'SAM-TB-012',
-      'responsavel': 'Prof. Carlos Drummond',
-    },
-  ];
+  final List<Map<String, String>> bens = [];
+  final AuthService _authService = AuthService();
+  bool _carregando = true;
+  String? _erro;
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarBens();
+  }
+
+  Future<void> _carregarBens() async {
+    try {
+      final items = await _authService.getPatrimonios(meus: true);
+      if (!mounted) return;
+      setState(() {
+        bens
+          ..clear()
+          ..addAll(
+            items.map(
+              (item) => {
+                'id': item['id']?.toString() ?? '',
+                'nome': item['nome']?.toString() ?? '-',
+                'tombo': item['codigo']?.toString() ?? '-',
+                'local': item['localizacao']?.toString() ?? '-',
+                'data': item['dataAtribuicao']?.toString() ?? '-',
+                'status': item['status']?.toString() ?? '-',
+                'categoria': item['categoria']?.toString() ?? '-',
+                'marca': item['marca']?.toString() ?? '-',
+                'serie': item['numeroSerie']?.toString() ?? '-',
+                'responsavel': item['professorNome']?.toString() ?? '-',
+                'icone': 'inventory',
+              },
+            ),
+          );
+        _carregando = false;
+      });
+    } on AuthException catch (error) {
+      if (mounted)
+        setState(() {
+          _erro = error.message;
+          _carregando = false;
+        });
+    }
+  }
 
   List<Map<String, String>> get bensFiltrados {
     final termo = busca.toLowerCase().trim();
@@ -175,7 +183,11 @@ class _BensProfessorPageState extends State<BensProfessorPage> {
 
             // Lista de bens
             Expanded(
-              child: bensFiltrados.isEmpty
+              child: _carregando
+                  ? const Center(child: CircularProgressIndicator())
+                  : _erro != null
+                  ? Center(child: Text(_erro!))
+                  : bensFiltrados.isEmpty
                   ? const Center(
                       child: Text(
                         'Nenhum bem encontrado.',

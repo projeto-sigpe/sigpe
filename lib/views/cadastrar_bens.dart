@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sigpe/service/service.dart';
 
 class CadastrarBensPage extends StatefulWidget {
   const CadastrarBensPage({super.key});
@@ -16,6 +17,8 @@ class _CadastrarBensPageState extends State<CadastrarBensPage> {
   final _serieController = TextEditingController();
 
   String? _categoriaSelecionada;
+  final AuthService _authService = AuthService();
+  bool _carregando = false;
 
   final List<String> _categorias = [
     'Informática',
@@ -161,7 +164,7 @@ class _CadastrarBensPageState extends State<CadastrarBensPage> {
                         width: double.infinity,
                         height: 48,
                         child: ElevatedButton(
-                          onPressed: _salvarBem,
+                          onPressed: _carregando ? null : _salvarBem,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF5A3824),
                             foregroundColor: Colors.white,
@@ -170,8 +173,8 @@ class _CadastrarBensPageState extends State<CadastrarBensPage> {
                             ),
                             elevation: 0,
                           ),
-                          child: const Text(
-                            'Salvar',
+                          child: Text(
+                            _carregando ? 'Salvando...' : 'Salvar',
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
@@ -246,21 +249,30 @@ class _CadastrarBensPageState extends State<CadastrarBensPage> {
     );
   }
 
-  void _salvarBem() {
+  Future<void> _salvarBem() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    final novoBem = {
-      'tombo': _tomboController.text.trim(),
-      'nome': _descricaoController.text.trim(),
-      'categoria': _categoriaSelecionada!,
-      'marca': _marcaController.text.trim(),
-      'serie': _serieController.text.trim(),
-      'local': 'Não informado',
-      'status': 'Disponível',
-    };
-
-    Navigator.pop(context, novoBem);
+    setState(() => _carregando = true);
+    try {
+      await _authService.createPatrimonio({
+        'codigo': _tomboController.text.trim(),
+        'nome': _descricaoController.text.trim(),
+        'categoria': _categoriaSelecionada!,
+        'marca': _marcaController.text.trim(),
+        'numeroSerie': _serieController.text.trim(),
+      });
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    } on AuthException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    } finally {
+      if (mounted) setState(() => _carregando = false);
+    }
   }
 }

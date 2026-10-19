@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:sigpe/contents/app_button.dart';
 import 'package:sigpe/contents/app_password.dart';
+import 'package:sigpe/service/service.dart';
 
 class NovaSenhaPage extends StatefulWidget {
-  const NovaSenhaPage({super.key});
+  final String email;
+  final String code;
+  const NovaSenhaPage({super.key, this.email = '', this.code = ''});
 
   @override
   State<NovaSenhaPage> createState() => _NovaSenhaPageState();
 }
 
 class _NovaSenhaPageState extends State<NovaSenhaPage> {
-
-  final TextEditingController novaSenhaController =
-      TextEditingController();
+  final TextEditingController novaSenhaController = TextEditingController();
 
   final TextEditingController confirmarSenhaController =
       TextEditingController();
+  final AuthService _authService = AuthService();
+  bool _carregando = false;
 
   @override
   void dispose() {
@@ -32,16 +35,12 @@ class _NovaSenhaPageState extends State<NovaSenhaPage> {
       body: SafeArea(
         child: Stack(
           children: [
-
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 22),
 
                 child: Column(
                   children: [
-
                     // VOLTAR
                     Align(
                       alignment: Alignment.centerLeft,
@@ -60,14 +59,14 @@ class _NovaSenhaPageState extends State<NovaSenhaPage> {
                     const SizedBox(height: 20),
 
                     // LOGO
-                Center(
-                  child: Image.asset(
-                    'assets/cadeado.png',
-                    width: 300,
-                    height: 150,
-                    fit: BoxFit.contain,
-                  ),
-                ),
+                    Center(
+                      child: Image.asset(
+                        'assets/cadeado.png',
+                        width: 300,
+                        height: 150,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
 
                     const SizedBox(height: 18),
 
@@ -88,10 +87,7 @@ class _NovaSenhaPageState extends State<NovaSenhaPage> {
                     const Text(
                       'Defina sua nova senha.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.black54,
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.black54),
                     ),
 
                     const SizedBox(height: 38),
@@ -116,19 +112,36 @@ class _NovaSenhaPageState extends State<NovaSenhaPage> {
 
                     // SALVAR
                     AppButton(
-                      texto: 'Salvar',
-                      onPressed: () {
-                        if (novaSenhaController.text ==
-                            confirmarSenhaController.text) {
-
-                          // futuramente salvar senha
-
-                          Navigator.popUntil(
-                            context,
-                            (route) => route.isFirst,
-                          );
-                        }
-                      },
+                      texto: _carregando ? 'Salvando...' : 'Salvar',
+                      onPressed: _carregando
+                          ? () {}
+                          : () async {
+                              if (novaSenhaController.text ==
+                                  confirmarSenhaController.text) {
+                                setState(() => _carregando = true);
+                                try {
+                                  await _authService.resetPassword(
+                                    email: widget.email,
+                                    code: widget.code,
+                                    newPassword: novaSenhaController.text,
+                                  );
+                                  if (mounted) {
+                                    Navigator.popUntil(
+                                      context,
+                                      (route) => route.isFirst,
+                                    );
+                                  }
+                                } on AuthException catch (error) {
+                                  if (mounted)
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(error.message)),
+                                    );
+                                } finally {
+                                  if (mounted)
+                                    setState(() => _carregando = false);
+                                }
+                              }
+                            },
                     ),
 
                     const SizedBox(height: 100),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:sigpe/service/service.dart';
 
-class HistoricoBensPage extends StatelessWidget {
+class HistoricoBensPage extends StatefulWidget {
   final Map<String, String> bem;
 
   const HistoricoBensPage({super.key, required this.bem});
@@ -9,36 +10,47 @@ class HistoricoBensPage extends StatelessWidget {
   static const Color texto = Color(0xFF3B2417);
   static const Color fundo = Color(0xFFF5EFE7);
 
-  final List<Map<String, String>> historico = const [
-    {
-      'data': '17/06/2025',
-      'hora': '08:30',
-      'titulo': 'Atribuído a Ana Souza',
-      'descricao': 'Professor',
-      'tipo': 'atribuicao',
-    },
-    {
-      'data': '12/05/2025',
-      'hora': '09:15',
-      'titulo': 'Em uso',
-      'descricao': 'Bem em utilização',
-      'tipo': 'uso',
-    },
-    {
-      'data': '05/04/2025',
-      'hora': '14:20',
-      'titulo': 'Manutenção',
-      'descricao': 'Conserto de tela',
-      'tipo': 'manutencao',
-    },
-    {
-      'data': '20/08/2025',
-      'hora': '10:05',
-      'titulo': 'Devolvido',
-      'descricao': 'Bem devolvido à instituição',
-      'tipo': 'devolucao',
-    },
-  ];
+  @override
+  State<HistoricoBensPage> createState() => _HistoricoBensPageState();
+}
+
+class _HistoricoBensPageState extends State<HistoricoBensPage> {
+  static const Color marrom = Color(0xFF5A3824);
+  static const Color texto = Color(0xFF3B2417);
+  static const Color fundo = Color(0xFFF5EFE7);
+  final AuthService _authService = AuthService();
+  List<Map<String, dynamic>> historico = [];
+  bool carregando = true;
+  String? erro;
+
+  @override
+  void initState() {
+    super.initState();
+    final id = int.tryParse(widget.bem['id'] ?? '');
+    if (id == null) {
+      carregando = false;
+      erro = 'Patrimônio inválido.';
+    } else {
+      _carregar(id);
+    }
+  }
+
+  Future<void> _carregar(int id) async {
+    try {
+      final items = await _authService.getPatrimonioHistory(id);
+      if (mounted)
+        setState(() {
+          historico = items;
+          carregando = false;
+        });
+    } on AuthException catch (error) {
+      if (mounted)
+        setState(() {
+          erro = error.message;
+          carregando = false;
+        });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +114,7 @@ class HistoricoBensPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            bem['nome'] ?? 'Bem patrimonial',
+                            widget.bem['nome'] ?? 'Bem patrimonial',
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -111,7 +123,7 @@ class HistoricoBensPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Tombamento: ${bem['tombo'] ?? '-'}',
+                            'Tombamento: ${widget.bem['tombo'] ?? '-'}',
                             style: const TextStyle(
                               fontSize: 13,
                               color: Colors.black54,
@@ -119,7 +131,7 @@ class HistoricoBensPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            bem['categoria'] ?? 'Sem categoria',
+                            widget.bem['categoria'] ?? 'Sem categoria',
                             style: const TextStyle(
                               fontSize: 13,
                               color: Colors.black54,
@@ -137,102 +149,110 @@ class HistoricoBensPage extends StatelessWidget {
 
             // Linha do tempo
             Expanded(
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.75),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE8DED3)),
-                ),
-                child: ListView.builder(
-                  itemCount: historico.length,
-                  itemBuilder: (context, index) {
-                    final evento = historico[index];
-                    final ultimo = index == historico.length - 1;
+              child: carregando
+                  ? const Center(child: CircularProgressIndicator())
+                  : erro != null
+                  ? Center(child: Text(erro!))
+                  : Container(
+                      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE8DED3)),
+                      ),
+                      child: ListView.builder(
+                        itemCount: historico.length,
+                        itemBuilder: (context, index) {
+                          final evento = historico[index];
+                          final ultimo = index == historico.length - 1;
 
-                    return IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Linha e marcador
-                          SizedBox(
-                            width: 28,
-                            child: Column(
+                          return IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  width: 16,
-                                  height: 16,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.white,
-                                    border: Border.all(color: marrom, width: 3),
-                                  ),
-                                  child: Center(
-                                    child: Container(
-                                      width: 5,
-                                      height: 5,
-                                      decoration: const BoxDecoration(
-                                        color: marrom,
-                                        shape: BoxShape.circle,
+                                // Linha e marcador
+                                SizedBox(
+                                  width: 28,
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        width: 16,
+                                        height: 16,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white,
+                                          border: Border.all(
+                                            color: marrom,
+                                            width: 3,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Container(
+                                            width: 5,
+                                            height: 5,
+                                            decoration: const BoxDecoration(
+                                              color: marrom,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                        ),
                                       ),
+                                      if (!ultimo)
+                                        Expanded(
+                                          child: Container(
+                                            width: 2,
+                                            color: const Color(0xFFC5B3A1),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+
+                                const SizedBox(width: 12),
+
+                                // Conteúdo do evento
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 28),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${evento['data']} - ${evento['hora']}',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFF80634E),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          evento['titulo']!,
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                            color: texto,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          evento['descricao']!,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Colors.black54,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
-                                if (!ultimo)
-                                  Expanded(
-                                    child: Container(
-                                      width: 2,
-                                      color: const Color(0xFFC5B3A1),
-                                    ),
-                                  ),
                               ],
                             ),
-                          ),
-
-                          const SizedBox(width: 12),
-
-                          // Conteúdo do evento
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(bottom: 28),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${evento['data']} - ${evento['hora']}',
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      color: Color(0xFF80634E),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    evento['titulo']!,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w600,
-                                      color: texto,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    evento['descricao']!,
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.black54,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
-              ),
+                    ),
             ),
           ],
         ),

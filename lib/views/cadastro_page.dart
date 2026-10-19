@@ -4,6 +4,7 @@ import 'package:sigpe/contents/app_text.dart';
 import 'package:sigpe/contents/app_password.dart';
 import 'package:sigpe/contents/app_button.dart';
 import 'package:sigpe/routes/app_routes.dart';
+import 'package:sigpe/service/service.dart';
 
 class Cadastro extends StatefulWidget {
   const Cadastro({super.key});
@@ -18,6 +19,8 @@ class _CadastroState extends State<Cadastro> {
   final emailController = TextEditingController();
   final senhaController = TextEditingController();
   final confirmarSenhaController = TextEditingController();
+  final AuthService authService = AuthService();
+  bool carregando = false;
 
   @override
   void dispose() {
@@ -70,14 +73,37 @@ class _CadastroState extends State<Cadastro> {
     return null;
   }
 
-  void cadastrar() {
+  Future<void> cadastrar() async {
     if (!(formKey.currentState?.validate() ?? false)) {
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Cadastro realizado com sucesso!')),
-    );
+    setState(() => carregando = true);
+
+    try {
+      await authService.register(
+        name: nomeController.text.trim(),
+        email: emailController.text.trim().toLowerCase(),
+        password: senhaController.text,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cadastro realizado com sucesso!')),
+      );
+      Navigator.pushReplacementNamed(context, AppRoutes.login);
+    } on AuthException catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } finally {
+      if (mounted) {
+        setState(() => carregando = false);
+      }
+    }
   }
 
   @override
@@ -185,7 +211,10 @@ class _CadastroState extends State<Cadastro> {
                 const SizedBox(height: 28),
 
                 // BOTÃO CADASTRAR
-                AppButton(texto: 'Cadastrar', onPressed: cadastrar),
+                AppButton(
+                  texto: carregando ? 'Cadastrando...' : 'Cadastrar',
+                  onPressed: carregando ? () {} : cadastrar,
+                ),
 
                 const SizedBox(height: 25),
 

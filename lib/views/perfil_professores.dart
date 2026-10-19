@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:sigpe/contents/bottom_nav.dart';
 import 'package:sigpe/contents/patrimonio_card.dart';
+import 'package:sigpe/service/service.dart';
 
 class PerfilProfessoresPage extends StatefulWidget {
-  const PerfilProfessoresPage({super.key});
+  final int professorId;
+
+  const PerfilProfessoresPage({super.key, required this.professorId});
 
   @override
   State<PerfilProfessoresPage> createState() => _PerfilProfessoresPageState();
@@ -11,47 +14,43 @@ class PerfilProfessoresPage extends StatefulWidget {
 
 class _PerfilProfessoresPageState extends State<PerfilProfessoresPage> {
   int _currentIndex = 2;
+  final AuthService _authService = AuthService();
+  Map<String, dynamic>? professor;
+  List<Map<String, dynamic>> patrimonios = [];
+  bool _carregando = true;
+  String? _erro;
 
-  // Dados fictícios baseados no JSON fornecido
-  final Map<String, dynamic> professor = {
-    'id': 2,
-    'nome': 'Prof. Carlos Drummond',
-    'email': 'professor@escola.com',
-    'matricula': 'PROF-2024-01',
-    'departamento': 'Língua Portuguesa e Literatura',
-    'telefone': '(11) 98765-1001',
-    'cpf': '123.456.789-00',
-    'role': 'professor',
-    'totalPatrimonios': 3,
-    'createdAt': '2026-09-14T19:33:00Z',
-  };
+  @override
+  void initState() {
+    super.initState();
+    _carregarPerfil();
+  }
 
-  final List<Map<String, String>> patrimonios = [
-    {
-      'nome': 'Notebook Dell',
-      'tombo': 'PAT-001',
-      'categoria': 'Informática',
-      'local': 'Sala dos professores',
-      'status': 'Em uso',
-    },
-    {
-      'nome': 'Projetor Epson',
-      'tombo': 'PAT-014',
-      'categoria': 'Audiovisual',
-      'local': 'Sala 12',
-      'status': 'Disponível',
-    },
-    {
-      'nome': 'Monitor LG',
-      'tombo': 'PAT-023',
-      'categoria': 'Informática',
-      'local': 'Laboratório',
-      'status': 'Em uso',
-    },
-  ];
+  Future<void> _carregarPerfil() async {
+    try {
+      final resultado = await _authService.getProfessorDetails(
+        widget.professorId,
+      );
+      if (!mounted) return;
+      setState(() {
+        professor = resultado['professor'] as Map<String, dynamic>;
+        patrimonios = (resultado['patrimonios'] as List)
+            .whereType<Map<String, dynamic>>()
+            .toList();
+        _carregando = false;
+      });
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _erro = error.message;
+        _carregando = false;
+      });
+    }
+  }
 
   String get dataCadastro {
-    final data = DateTime.parse(professor['createdAt']).toLocal();
+    final data = DateTime.tryParse(professor?['createdAt']?.toString() ?? '');
+    if (data == null) return '-';
 
     return '${data.day.toString().padLeft(2, '0')}/'
         '${data.month.toString().padLeft(2, '0')}/'
@@ -91,130 +90,137 @@ class _PerfilProfessoresPageState extends State<PerfilProfessoresPage> {
             ),
 
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  // Cartão principal do professor
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(22),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFE8DED3)),
-                    ),
-                    child: Column(
+              child: _carregando
+                  ? const Center(child: CircularProgressIndicator())
+                  : _erro != null
+                  ? Center(child: Text(_erro!))
+                  : ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       children: [
-                        const CircleAvatar(
-                          radius: 42,
-                          backgroundColor: Color(0xFFE9DED2),
-                          child: Icon(
-                            Icons.person,
-                            size: 48,
-                            color: Color(0xFF5A3824),
+                        // Cartão principal do professor
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(22),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE8DED3)),
+                          ),
+                          child: Column(
+                            children: [
+                              const CircleAvatar(
+                                radius: 42,
+                                backgroundColor: Color(0xFFE9DED2),
+                                child: Icon(
+                                  Icons.person,
+                                  size: 48,
+                                  color: Color(0xFF5A3824),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+
+                              Text(
+                                professor!['nome']?.toString() ?? '-',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF3B2417),
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+
+                              Text(
+                                'Professor',
+                                style: TextStyle(
+                                  color: Colors.brown.shade400,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              const SizedBox(height: 18),
+                              const Divider(),
+
+                              _informacao(
+                                'ID',
+                                professor!['id']?.toString() ?? '-',
+                                Icons.numbers,
+                              ),
+                              _informacao(
+                                'Matrícula',
+                                professor!['matricula']?.toString() ?? '-',
+                                Icons.badge_outlined,
+                              ),
+                              _informacao(
+                                'E-mail',
+                                professor!['email']?.toString() ?? '-',
+                                Icons.email_outlined,
+                              ),
+                              _informacao(
+                                'Telefone',
+                                professor!['telefone']?.toString() ?? '-',
+                                Icons.phone_outlined,
+                              ),
+                              _informacao(
+                                'CPF',
+                                professor!['cpf']?.toString() ?? '-',
+                                Icons.assignment_ind_outlined,
+                              ),
+                              _informacao(
+                                'Departamento',
+                                professor!['departamento']?.toString() ?? '-',
+                                Icons.menu_book_outlined,
+                              ),
+                              _informacao(
+                                'Perfil de acesso',
+                                'Professor',
+                                Icons.manage_accounts_outlined,
+                              ),
+                              _informacao(
+                                'Data de cadastro',
+                                dataCadastro,
+                                Icons.calendar_today_outlined,
+                              ),
+                              _informacao(
+                                'Patrimônios vinculados',
+                                professor!['totalPatrimonios']?.toString() ??
+                                    '0',
+                                Icons.inventory_2_outlined,
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 12),
 
-                        Text(
-                          professor['nome'],
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 20,
+                        const SizedBox(height: 22),
+
+                        const Text(
+                          'Patrimônios vinculados',
+                          style: TextStyle(
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF3B2417),
                           ),
                         ),
-                        const SizedBox(height: 5),
 
-                        Text(
-                          'Professor',
-                          style: TextStyle(
-                            color: Colors.brown.shade400,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        const Divider(),
+                        const SizedBox(height: 12),
 
-                        _informacao(
-                          'ID',
-                          professor['id'].toString(),
-                          Icons.numbers,
-                        ),
-                        _informacao(
-                          'Matrícula',
-                          professor['matricula'],
-                          Icons.badge_outlined,
-                        ),
-                        _informacao(
-                          'E-mail',
-                          professor['email'],
-                          Icons.email_outlined,
-                        ),
-                        _informacao(
-                          'Telefone',
-                          professor['telefone'],
-                          Icons.phone_outlined,
-                        ),
-                        _informacao(
-                          'CPF',
-                          professor['cpf'],
-                          Icons.assignment_ind_outlined,
-                        ),
-                        _informacao(
-                          'Departamento',
-                          professor['departamento'],
-                          Icons.menu_book_outlined,
-                        ),
-                        _informacao(
-                          'Perfil de acesso',
-                          'Professor',
-                          Icons.manage_accounts_outlined,
-                        ),
-                        _informacao(
-                          'Data de cadastro',
-                          dataCadastro,
-                          Icons.calendar_today_outlined,
-                        ),
-                        _informacao(
-                          'Patrimônios vinculados',
-                          professor['totalPatrimonios'].toString(),
-                          Icons.inventory_2_outlined,
-                        ),
+                        ...patrimonios.map((patrimonio) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: PatrimonioCard(
+                              nome: patrimonio['nome']?.toString() ?? '-',
+                              tombo: patrimonio['codigo']?.toString() ?? '-',
+                              categoria:
+                                  patrimonio['categoria']?.toString() ?? '-',
+                              local:
+                                  patrimonio['localizacao']?.toString() ?? '-',
+                              status: patrimonio['status']?.toString() ?? '-',
+                            ),
+                          );
+                        }),
+
+                        const SizedBox(height: 12),
                       ],
                     ),
-                  ),
-
-                  const SizedBox(height: 22),
-
-                  const Text(
-                    'Patrimônios vinculados',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF3B2417),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  ...patrimonios.map((patrimonio) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: PatrimonioCard(
-                        nome: patrimonio['nome']!,
-                        tombo: patrimonio['tombo']!,
-                        categoria: patrimonio['categoria']!,
-                        local: patrimonio['local']!,
-                        status: patrimonio['status']!,
-                      ),
-                    );
-                  }),
-
-                  const SizedBox(height: 12),
-                ],
-              ),
             ),
           ],
         ),

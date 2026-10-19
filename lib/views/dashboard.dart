@@ -16,6 +16,30 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
   int _currentIndex = 0;
+  final AuthService _authService = AuthService();
+  Map<String, dynamic> _stats = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _carregarStats();
+  }
+
+  Future<void> _carregarStats() async {
+    try {
+      final stats = await _authService.getPatrimonioStats();
+      if (mounted) setState(() => _stats = stats);
+    } on AuthException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    }
+  }
+
+  String _stat(String key, [String fallback = '0']) =>
+      _stats[key]?.toString() ?? fallback;
 
   static const Color marrom = Color(0xFF4A2E1F);
   static const Color fundo = Color(0xFFF5EFE7);
@@ -55,8 +79,8 @@ class _DashboardState extends State<Dashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Olá, Ana Souza!',
+                    Text(
+                      'Olá, ${_stats['nome'] ?? 'Administrador'}!',
                       style: TextStyle(
                         fontSize: 19,
                         fontWeight: FontWeight.bold,
@@ -194,9 +218,9 @@ class _DashboardState extends State<Dashboard> {
 
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  '1.482',
+                  _stat('total', _stat('totalPatrimonios')),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 36,
@@ -245,18 +269,24 @@ class _DashboardState extends State<Dashboard> {
   }
 
   Widget _buildResumo() {
-    return const Row(
+    return Row(
       children: [
         Expanded(
-          child: _ResumoCard(titulo: 'Disponível', quantidade: '415'),
+          child: _ResumoCard(
+            titulo: 'Disponível',
+            quantidade: _stat('disponiveis', _stat('disponivel')),
+          ),
         ),
         SizedBox(width: 8),
         Expanded(
-          child: _ResumoCard(titulo: 'Em uso', quantidade: '984'),
+          child: _ResumoCard(titulo: 'Em uso', quantidade: _stat('emUso')),
         ),
         SizedBox(width: 8),
         Expanded(
-          child: _ResumoCard(titulo: 'Manutenção', quantidade: '83'),
+          child: _ResumoCard(
+            titulo: 'Manutenção',
+            quantidade: _stat('manutencao'),
+          ),
         ),
       ],
     );

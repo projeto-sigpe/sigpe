@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import '../contents/app_button.dart';
 import '../contents/app_text.dart';
 import '../routes/app_routes.dart';
-
+import '../service/service.dart';
+import 'verificar_codigo.dart';
 
 class RecuperarSenhaPage extends StatefulWidget {
   const RecuperarSenhaPage({super.key});
@@ -14,6 +15,8 @@ class RecuperarSenhaPage extends StatefulWidget {
 
 class _RecuperarSenhaPageState extends State<RecuperarSenhaPage> {
   final TextEditingController emailController = TextEditingController();
+  final AuthService _authService = AuthService();
+  bool _carregando = false;
 
   @override
   void dispose() {
@@ -29,16 +32,12 @@ class _RecuperarSenhaPageState extends State<RecuperarSenhaPage> {
       body: SafeArea(
         child: Stack(
           children: [
-
             SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 22,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 22),
 
                 child: Column(
                   children: [
-
                     // VOLTAR
                     Align(
                       alignment: Alignment.centerLeft,
@@ -107,10 +106,37 @@ class _RecuperarSenhaPageState extends State<RecuperarSenhaPage> {
 
                     // BOTÃO
                     AppButton(
-                      texto: 'Enviar código',
-                      onPressed: () {
-                        Navigator.pushNamed(context, AppRoutes.verificarCodigo);
-                      },
+                      texto: _carregando ? 'Enviando...' : 'Enviar código',
+                      onPressed: _carregando
+                          ? () {}
+                          : () async {
+                              setState(() => _carregando = true);
+                              try {
+                                await _authService.forgotPassword(
+                                  emailController.text.trim().toLowerCase(),
+                                );
+                                if (mounted) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => VerificarCodigoPage(
+                                        email: emailController.text
+                                            .trim()
+                                            .toLowerCase(),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              } on AuthException catch (error) {
+                                if (mounted)
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(error.message)),
+                                  );
+                              } finally {
+                                if (mounted)
+                                  setState(() => _carregando = false);
+                              }
+                            },
                     ),
 
                     const SizedBox(height: 24),
@@ -118,7 +144,10 @@ class _RecuperarSenhaPageState extends State<RecuperarSenhaPage> {
                     // VOLTAR PARA LOGIN
                     TextButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(context, AppRoutes.login);
+                        Navigator.pushReplacementNamed(
+                          context,
+                          AppRoutes.login,
+                        );
                       },
                       child: const Text(
                         'Voltar para o login',
