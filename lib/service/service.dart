@@ -234,15 +234,18 @@ class AuthService {
       final body = _decodeBody(response.body);
 
       if (response.statusCode == 200) {
-        final professores = body['professores'];
+        final professores =
+            body['professores'] ?? body['items'] ?? body['data'];
+
         if (professores is List) {
           return professores
               .whereType<Map>()
               .map((item) => Map<String, dynamic>.from(item))
               .toList();
         }
+
         throw const AuthException(
-          'a API retornou uma lista de professores invÃƒÆ’Ã‚Â¡lida.',
+          'A API retornou uma lista de professores inválida.',
         );
       }
 
@@ -414,6 +417,17 @@ Future<List<Map<String, dynamic>>> getPatrimonios({
           'Não foi possível carregar os patrimônios.',
       statusCode: response.statusCode,
     );
+    final values = body['items'] ?? body['patrimonios'] ?? body['data'] ?? body;
+
+    if (values is! List) {
+      throw const AuthException(
+        'A API retornou uma lista de patrimônios inválida.',
+      );
+    }
+    return values
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
   }
 
   // A API pode retornar a lista diretamente ou dentro de um objeto.
@@ -685,17 +699,21 @@ dynamic _procurarListaHistorico(dynamic valor, [int nivel = 0]) {
 
     final decoded = jsonDecode(body);
 
-    if (decoded is! Map<String, dynamic>) {
-      return <String, dynamic>{};
+    if (decoded is Map<String, dynamic>) {
+      final nestedData = decoded['data'];
+
+      if (nestedData is Map<String, dynamic>) {
+        return {...decoded, ...nestedData};
+      }
+
+      return decoded;
     }
 
-    final nestedData = decoded['data'];
-
-    if (nestedData is Map<String, dynamic>) {
-      return {...decoded, ...nestedData};
+    if (decoded is List) {
+      return {'patrimonios': decoded};
     }
 
-    return decoded;
+    return <String, dynamic>{};
   }
 
   // LER A MENSAGEM DE ERRO DA API

@@ -7,6 +7,8 @@ import 'package:sigpe/views/cadastrar_bens.dart';
 import 'package:sigpe/views/devolver_bens.dart';
 import 'package:sigpe/views/historico_bens.dart';
 import 'package:sigpe/service/service.dart';
+import 'package:sigpe/views/dashboard.dart';
+import 'package:sigpe/views/professores_page.dart';
 
 class BensPage extends StatefulWidget {
   const BensPage({super.key});
@@ -25,6 +27,23 @@ class _BensPageState extends State<BensPage> {
   String _busca = '';
   String _statusSelecionado = 'Todos';
   String _categoriaSelecionada = 'Todas as categorias';
+
+  String _formatarStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'em_uso':
+        return 'Em uso';
+      case 'disponivel':
+      case 'disponível':
+        return 'Disponível';
+      case 'em_manutencao':
+      case 'em manutenção':
+        return 'Manutenção';
+      case 'baixado':
+        return 'Baixado';
+      default:
+        return status;
+    }
+  }
 
   final List<Map<String, String>> _bens = [];
   final AuthService _authService = AuthService();
@@ -187,6 +206,23 @@ class _BensPageState extends State<BensPage> {
       ...existentes,
     ];
   }
+  Map<String, String> _mapBem(Map<String, dynamic> item) => {
+    'id': item['id']?.toString() ?? '',
+    'nome': item['nome']?.toString() ?? '-',
+    'tombo': item['codigo']?.toString() ?? '-',
+    'categoria': item['categoria']?.toString() ?? '-',
+    'local': item['localizacao']?.toString() ?? '-',
+    'status': _formatarStatus(item['status']?.toString() ?? '-'),
+    'marca': item['marca']?.toString() ?? '-',
+    'serie': item['numeroSerie']?.toString() ?? '-',
+  };
+
+  final List<String> _categorias = [
+    'Todas as categorias',
+    'Informática',
+    'Audiovisual',
+    'Mobiliário',
+  ];
 
   List<Map<String, String>> get _bensFiltrados {
     return _bens.where((bem) {
@@ -413,6 +449,14 @@ class _BensPageState extends State<BensPage> {
                 children: [
                   IconButton(
                     onPressed: () => Navigator.maybePop(context),
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const Dashboard(),
+                        ),
+                      );
+                    },
                     icon: const Icon(
                       Icons.arrow_back,
                       color: marrom,
@@ -683,7 +727,21 @@ class _BensPageState extends State<BensPage> {
       bottomNavigationBar: AppBottomNav(
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() => _currentIndex = index);
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const Dashboard()),
+            );
+          } else if (index == 1) {
+            setState(() {
+              _currentIndex = 1;
+            });
+          } else if (index == 2) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const ProfessoresPage()),
+            );
+          }
         },
       ),
     );

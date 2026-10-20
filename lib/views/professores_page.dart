@@ -6,6 +6,8 @@ import 'package:sigpe/contents/professor_card.dart';
 import 'package:sigpe/service/service.dart';
 import 'package:sigpe/views/perfil_professores.dart';
 import 'package:sigpe/views/cadastro_professor.dart';
+import 'package:sigpe/views/dashboard.dart';
+import 'package:sigpe/views/bens_page.dart';
 
 class ProfessoresPage extends StatefulWidget {
   const ProfessoresPage({super.key});
@@ -98,7 +100,14 @@ class _ProfessoresPageState extends State<ProfessoresPage> {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const Dashboard(),
+                        ),
+                      );
+                    },
                     icon: const Icon(
                       Icons.arrow_back,
                       color: Color(0xFF4A2E1F),
@@ -237,7 +246,21 @@ class _ProfessoresPageState extends State<ProfessoresPage> {
       bottomNavigationBar: AppBottomNav(
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() => _currentIndex = index);
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const Dashboard()),
+            );
+          } else if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const BensPage()),
+            );
+          } else if (index == 2) {
+            setState(() {
+              _currentIndex = index;
+            });
+          }
         },
       ),
     );

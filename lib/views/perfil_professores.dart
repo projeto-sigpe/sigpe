@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:sigpe/contents/bottom_nav.dart';
 import 'package:sigpe/contents/patrimonio_card.dart';
 import 'package:sigpe/service/service.dart';
+import 'package:sigpe/views/dashboard.dart';
+import 'package:sigpe/views/bens_page.dart';
 
 class PerfilProfessoresPage extends StatefulWidget {
   final int professorId;
@@ -228,7 +230,21 @@ class _PerfilProfessoresPageState extends State<PerfilProfessoresPage> {
       bottomNavigationBar: AppBottomNav(
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() => _currentIndex = index);
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const Dashboard()),
+            );
+          } else if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const BensPage()),
+            );
+          } else if (index == 2) {
+            setState(() {
+              _currentIndex = index;
+            });
+          }
         },
       ),
     );
