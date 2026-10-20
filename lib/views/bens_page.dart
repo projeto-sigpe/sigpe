@@ -6,6 +6,8 @@ import 'package:sigpe/views/cadastrar_bens.dart';
 import 'package:sigpe/views/devolver_bens.dart';
 import 'package:sigpe/views/historico_bens.dart';
 import 'package:sigpe/service/service.dart';
+import 'package:sigpe/views/dashboard.dart';
+import 'package:sigpe/views/professores_page.dart';
 
 class BensPage extends StatefulWidget {
   const BensPage({super.key});
@@ -234,7 +236,14 @@ class _BensPageState extends State<BensPage> {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const Dashboard(),
+                        ),
+                      );
+                    },
                     icon: const Icon(
                       Icons.arrow_back,
                       color: Color(0xFF4A2E1F),
@@ -449,7 +458,21 @@ class _BensPageState extends State<BensPage> {
       bottomNavigationBar: AppBottomNav(
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() => _currentIndex = index);
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const Dashboard()),
+            );
+          } else if (index == 1) {
+            setState(() {
+              _currentIndex = 1;
+            });
+          } else if (index == 2) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const ProfessoresPage()),
+            );
+          }
         },
       ),
     );

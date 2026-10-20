@@ -116,21 +116,22 @@ class _DashboardState extends State<Dashboard> {
       ),
       bottomNavigationBar: AppBottomNav(
         currentIndex: _currentIndex,
+
         onTap: (index) {
-          if (index == 1) {
-            Navigator.push(
+          if (index == 0) {
+            setState(() {
+              _currentIndex = 0;
+            });
+          } else if (index == 1) {
+            Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const BensPage()),
             );
           } else if (index == 2) {
-            Navigator.push(
+            Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const ProfessoresPage()),
             );
-          } else {
-            setState(() {
-              _currentIndex = index;
-            });
           }
         },
       ),
