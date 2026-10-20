@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:sigpe/contents/app_button.dart';
 import 'package:sigpe/contents/app_text.dart';
 import 'package:sigpe/routes/app_routes.dart';
@@ -29,6 +30,7 @@ class _LoginPageState extends State<LoginPage> {
 
   String? validarEmail(String? value) {
     final email = value?.trim() ?? '';
+
     if (email.isEmpty) {
       return 'E-mail é obrigatório.';
     }
@@ -53,34 +55,46 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    setState(() => carregando = true);
+    setState(() {
+      carregando = true;
+    });
 
     final email = emailController.text.trim().toLowerCase();
 
     try {
-      await authService.login(email: email, password: senhaController.text);
+      final resposta = await authService.login(
+        email: email,
+        password: senhaController.text,
+      );
 
       if (!mounted) return;
 
-      if (email == 'admin@admin.com') {
+      final perfil = resposta.role?.trim().toLowerCase();
+
+      if (perfil == 'admin') {
         Navigator.pushReplacementNamed(context, AppRoutes.admin);
-      } else if (email == 'professor@escola.com' ||
-          email == 'maria.silva@escola.com') {
+      } else if (perfil == 'professor') {
         Navigator.pushReplacementNamed(context, AppRoutes.professor);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Perfil de usuário não reconhecido.')),
+          SnackBar(
+            content: Text(
+              'Perfil não reconhecido: ${perfil ?? "não informado"}.',
+            ),
+          ),
         );
       }
-    } on AuthException catch (error) {
+    } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(error.message)));
+      ).showSnackBar(SnackBar(content: Text('Não foi possível entrar: $e')));
     } finally {
       if (mounted) {
-        setState(() => carregando = false);
+        setState(() {
+          carregando = false;
+        });
       }
     }
   }
@@ -89,11 +103,9 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F4EE),
-
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 40),
-
           child: Form(
             key: formKey,
             child: Column(
@@ -101,15 +113,11 @@ class _LoginPageState extends State<LoginPage> {
               children: [
                 // LOGO
                 Center(
-                  child: Column(
-                    children: [
-                      Image.asset(
-                        'assets/Logo2.png',
-                        width: 400,
-                        height: 200,
-                        fit: BoxFit.contain,
-                      ),
-                    ],
+                  child: Image.asset(
+                    'assets/Logo2.png',
+                    width: 400,
+                    height: 200,
+                    fit: BoxFit.contain,
                   ),
                 ),
 
@@ -133,12 +141,10 @@ class _LoginPageState extends State<LoginPage> {
                   controller: senhaController,
                   obscureText: !mostrarSenha,
                   validator: validarSenha,
-
                   suffixIcon: IconButton(
                     icon: Icon(
                       mostrarSenha ? Icons.visibility : Icons.visibility_off,
                     ),
-
                     onPressed: () {
                       setState(() {
                         mostrarSenha = !mostrarSenha;
@@ -181,12 +187,10 @@ class _LoginPageState extends State<LoginPage> {
                         'Não tem uma conta? ',
                         style: TextStyle(color: Colors.black54),
                       ),
-
                       GestureDetector(
                         onTap: () {
                           Navigator.pushNamed(context, AppRoutes.cadastro);
                         },
-
                         child: const Text(
                           'Cadastre-se',
                           style: TextStyle(
