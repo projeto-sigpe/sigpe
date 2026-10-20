@@ -23,6 +23,23 @@ class _BensPageState extends State<BensPage> {
   String _statusSelecionado = 'Todos';
   String _categoriaSelecionada = 'Todas as categorias';
 
+  String _formatarStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'em_uso':
+        return 'Em uso';
+      case 'disponivel':
+      case 'disponível':
+        return 'Disponível';
+      case 'em_manutencao':
+      case 'em manutenção':
+        return 'Manutenção';
+      case 'baixado':
+        return 'Baixado';
+      default:
+        return status;
+    }
+  }
+
   final List<Map<String, String>> _bens = [];
   final AuthService _authService = AuthService();
   bool _carregando = true;
@@ -59,7 +76,7 @@ class _BensPageState extends State<BensPage> {
     'tombo': item['codigo']?.toString() ?? '-',
     'categoria': item['categoria']?.toString() ?? '-',
     'local': item['localizacao']?.toString() ?? '-',
-    'status': item['status']?.toString() ?? '-',
+    'status': _formatarStatus(item['status']?.toString() ?? '-'),
     'marca': item['marca']?.toString() ?? '-',
     'serie': item['numeroSerie']?.toString() ?? '-',
   };
