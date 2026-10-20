@@ -293,6 +293,12 @@ class AuthService {
     });
   }
 
+  Future<void> alterarSenha({required String senhaNova}) async {
+    final uri = Uri.parse('$baseUrl/api/profile');
+
+    await _sendJson(uri, {'newPassword': senhaNova}, method: 'PUT');
+  }
+
   Future<Map<String, dynamic>> getProfessorDetails(int professorId) async {
     final uri = Uri.parse('$baseUrl/api/admin/professores/$professorId');
 

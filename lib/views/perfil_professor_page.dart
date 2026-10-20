@@ -85,99 +85,15 @@ class _PerfilProfessorPageState extends State<PerfilProfessorPage> {
   }
 
   void _alterarSenha() {
-    final senhaAtualController = TextEditingController();
-    final senhaNovaController = TextEditingController();
-    final confirmarController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
     showDialog(
       context: context,
       builder: (dialogContext) {
-        bool ocultar = true;
-
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: fundo,
-              title: const Text(
-                'Alterar senha',
-                style: TextStyle(color: marrom, fontWeight: FontWeight.bold),
-              ),
-              content: Form(
-                key: formKey,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _campoSenha(
-                        controller: senhaAtualController,
-                        label: 'Senha atual',
-                        ocultar: ocultar,
-                        alternar: () {
-                          setDialogState(() => ocultar = !ocultar);
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      _campoSenha(
-                        controller: senhaNovaController,
-                        label: 'Nova senha',
-                        ocultar: ocultar,
-                        alternar: () {
-                          setDialogState(() => ocultar = !ocultar);
-                        },
-                      ),
-                      const SizedBox(height: 12),
-                      _campoSenha(
-                        controller: confirmarController,
-                        label: 'Confirmar nova senha',
-                        ocultar: ocultar,
-                        alternar: () {
-                          setDialogState(() => ocultar = !ocultar);
-                        },
-                        validator: (value) {
-                          if (value != senhaNovaController.text) {
-                            return 'As senhas não coincidem.';
-                          }
-                          if (value == null || value.isEmpty) {
-                            return 'Confirme a nova senha.';
-                          }
-                          return null;
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext),
-                  child: const Text('Cancelar', style: TextStyle(color: texto)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: marrom,
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () {
-                    if (!(formKey.currentState?.validate() ?? false)) {
-                      return;
-                    }
-
-                    Navigator.of(dialogContext).pop();
-
-                    ScaffoldMessenger.of(this.context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'A alteração de senha será integrada à API.',
-                        ),
-                      ),
-                    );
-                  },
-                  child: const Text('Salvar'),
-                ),
-              ],
-            );
-          },
+        return _DialogAlterarSenha(
+          fundo: fundo,
+          marrom: marrom,
+          texto: texto,
+          borda: borda,
+          authService: AuthService(),
         );
       },
     );
@@ -239,11 +155,17 @@ class _PerfilProfessorPageState extends State<PerfilProfessorPage> {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DashboardProfessorPage(),
+                        ),
+                      );
+                    },
                     icon: const Icon(
-                      Icons.arrow_back_ios_new,
-                      size: 18,
-                      color: marrom,
+                      Icons.arrow_back,
+                      color: Color(0xFF4A2E1F),
                     ),
                   ),
                   const Text(
@@ -417,5 +339,172 @@ class _PerfilProfessorPageState extends State<PerfilProfessorPage> {
 
   Widget _divisor() {
     return const Divider(height: 1, thickness: 0.6, color: borda);
+  }
+}
+
+class _DialogAlterarSenha extends StatefulWidget {
+  final Color fundo;
+  final Color marrom;
+  final Color texto;
+  final Color borda;
+  final AuthService authService;
+
+  const _DialogAlterarSenha({
+    required this.fundo,
+    required this.marrom,
+    required this.texto,
+    required this.borda,
+    required this.authService,
+  });
+
+  @override
+  State<_DialogAlterarSenha> createState() => _DialogAlterarSenhaState();
+}
+
+class _DialogAlterarSenhaState extends State<_DialogAlterarSenha> {
+  final _formKey = GlobalKey<FormState>();
+  final _senhaAtualController = TextEditingController();
+  final _senhaNovaController = TextEditingController();
+  final _confirmarController = TextEditingController();
+
+  bool _ocultar = true;
+
+  @override
+  void dispose() {
+    _senhaAtualController.dispose();
+    _senhaNovaController.dispose();
+    _confirmarController.dispose();
+    super.dispose();
+  }
+
+  Widget _campo({
+    required TextEditingController controller,
+    required String label,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: _ocultar,
+      validator:
+          validator ??
+          (value) {
+            if (value == null || value.isEmpty) {
+              return 'Preencha este campo.';
+            }
+            return null;
+          },
+      decoration: InputDecoration(
+        labelText: label,
+        suffixIcon: IconButton(
+          onPressed: () {
+            setState(() => _ocultar = !_ocultar);
+          },
+          icon: Icon(_ocultar ? Icons.visibility_off : Icons.visibility),
+        ),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(9),
+          borderSide: BorderSide(color: widget.borda),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: widget.fundo,
+      title: Text(
+        'Alterar senha',
+        style: TextStyle(color: widget.marrom, fontWeight: FontWeight.bold),
+      ),
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _campo(controller: _senhaAtualController, label: 'Senha atual'),
+              const SizedBox(height: 12),
+              _campo(
+                controller: _senhaNovaController,
+                label: 'Nova senha',
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Informe a nova senha.';
+                  }
+                  if (value.length < 8) {
+                    return 'Use pelo menos 8 caracteres.';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              _campo(
+                controller: _confirmarController,
+                label: 'Confirmar nova senha',
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Confirme a nova senha.';
+                  }
+                  if (value != _senhaNovaController.text) {
+                    return 'As senhas não coincidem.';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        // Botão Cancelar apenas fecha o dialog
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text('Cancelar', style: TextStyle(color: widget.texto)),
+        ),
+
+        // Botão Salvar valida e chama a API
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: widget.marrom,
+            foregroundColor: Colors.white,
+          ),
+          onPressed: () async {
+            if (!(_formKey.currentState?.validate() ?? false)) {
+              return;
+            }
+
+            try {
+              await widget.authService.updateProfile({
+                'newPassword': _senhaNovaController.text,
+              });
+
+              if (!mounted) return;
+
+              Navigator.of(context).pop(); // Fecha o dialog após sucesso
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Senha alterada com sucesso!')),
+              );
+            } on AuthException catch (error) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(error.message)));
+            } catch (error) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Erro ao conectar com a API.')),
+              );
+            }
+          },
+          child: const Text('Salvar'),
+        ),
+      ],
+    );
   }
 }
