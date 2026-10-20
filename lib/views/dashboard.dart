@@ -28,7 +28,12 @@ class _DashboardState extends State<Dashboard> {
   Future<void> _carregarStats() async {
     try {
       final stats = await _authService.getPatrimonioStats();
-      if (mounted) setState(() => _stats = stats);
+
+      if (mounted) {
+        setState(() {
+          _stats = stats;
+        });
+      }
     } on AuthException catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -171,10 +176,6 @@ class _DashboardState extends State<Dashboard> {
                   ),
                 ),
                 SizedBox(height: 3),
-                Text(
-                  'Olá, Ana Souza!',
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
-                ),
               ],
             ),
           ),
@@ -244,23 +245,42 @@ class _DashboardState extends State<Dashboard> {
 
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: const LinearProgressIndicator(
-              value: 0.86,
+            child: LinearProgressIndicator(
+              value: () {
+                final total = num.tryParse(_stat('totalPatrimonios')) ?? 0;
+                final disponiveis =
+                    num.tryParse(_stat('patrimoniosDisponiveis')) ?? 0;
+
+                return total > 0
+                    ? (disponiveis / total).clamp(0.0, 1.0).toDouble()
+                    : 0.0;
+              }(),
               minHeight: 7,
-              backgroundColor: Color(0xFF8C7B6C),
-              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFBCA38C)),
+              backgroundColor: const Color(0xFF8C7B6C),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFFBCA38C),
+              ),
             ),
           ),
 
           const SizedBox(height: 16),
 
-          const Wrap(
+          Wrap(
             spacing: 12,
             runSpacing: 8,
             children: [
-              _Legenda(cor: Color(0xFFD2B89F), texto: '684 Disponíveis'),
-              _Legenda(cor: Color(0xFFA8B3A1), texto: '512 Em uso'),
-              _Legenda(cor: Color(0xFFC58B63), texto: '286 Manutenção'),
+              _Legenda(
+                cor: const Color(0xFFD2B89F),
+                texto: '${_stat('patrimoniosDisponiveis')} Disponíveis',
+              ),
+              _Legenda(
+                cor: const Color(0xFFA8B3A1),
+                texto: '${_stat('patrimoniosEmUso')} Em uso',
+              ),
+              _Legenda(
+                cor: const Color(0xFFC58B63),
+                texto: '${_stat('patrimoniosEmManutencao')} Manutenção',
+              ),
             ],
           ),
         ],
@@ -274,18 +294,21 @@ class _DashboardState extends State<Dashboard> {
         Expanded(
           child: _ResumoCard(
             titulo: 'Disponível',
-            quantidade: _stat('disponiveis', _stat('disponivel')),
+            quantidade: _stat('patrimoniosDisponiveis'),
           ),
         ),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Expanded(
-          child: _ResumoCard(titulo: 'Em uso', quantidade: _stat('emUso')),
+          child: _ResumoCard(
+            titulo: 'Em uso',
+            quantidade: _stat('patrimoniosEmUso'),
+          ),
         ),
-        SizedBox(width: 8),
+        const SizedBox(width: 8),
         Expanded(
           child: _ResumoCard(
             titulo: 'Manutenção',
-            quantidade: _stat('manutencao'),
+            quantidade: _stat('patrimoniosEmManutencao'),
           ),
         ),
       ],
@@ -293,13 +316,40 @@ class _DashboardState extends State<Dashboard> {
   }
 
   Widget _buildCategorias() {
-    final categorias = [
-      _Categoria('Informática', 0.35, '35%', Color(0xFF827E75)),
-      _Categoria('Mobiliário', 0.26, '26%', Color(0xFFB3A18F)),
-      _Categoria('Laboratório', 0.20, '20%', Color(0xFF4A2E1F)),
-      _Categoria('Audiovisual', 0.12, '12%', Color(0xFFD1B69D)),
-      _Categoria('Outros', 0.07, '7%', Color(0xFF6B5140)),
+    final Map<String, dynamic> dadosCategoria = Map<String, dynamic>.from(
+      _stats['porCategoria'] ?? {},
+    );
+
+    final int total = dadosCategoria.values.fold<int>(
+      0,
+      (soma, quantidade) => soma + (quantidade as num).toInt(),
+    );
+
+    final cores = [
+      const Color(0xFF827E75),
+      const Color(0xFFB3A18F),
+      const Color(0xFF4A2E1F),
+      const Color(0xFFD1B69D),
+      const Color(0xFF6B5140),
     ];
+
+    final categorias = dadosCategoria.entries.toList().asMap().entries.map((
+      item,
+    ) {
+      final categoria = item.value;
+      final quantidade = (categoria.value as num).toInt();
+      final percentual = total > 0 ? quantidade / total : 0.0;
+
+      return _Categoria(
+        categoria.key,
+        percentual,
+        '${(percentual * 100).round()}%',
+        cores[item.key % cores.length],
+      );
+    }).toList();
+
+    // Mantenha abaixo o restante do método atual,
+    // que desenha o gráfico e a legenda.
 
     return Column(
       children: [
