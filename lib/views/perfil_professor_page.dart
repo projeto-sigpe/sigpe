@@ -163,7 +163,8 @@ class _PerfilProfessorPageState extends State<PerfilProfessorPage> {
                       return;
                     }
 
-                    Navigator.pop(dialogContext);
+                    Navigator.of(dialogContext).pop();
+
                     ScaffoldMessenger.of(this.context).showSnackBar(
                       const SnackBar(
                         content: Text(
@@ -179,11 +180,7 @@ class _PerfilProfessorPageState extends State<PerfilProfessorPage> {
           },
         );
       },
-    ).then((_) {
-      senhaAtualController.dispose();
-      senhaNovaController.dispose();
-      confirmarController.dispose();
-    });
+    );
   }
 
   Widget _campoSenha({

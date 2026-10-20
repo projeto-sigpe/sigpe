@@ -247,59 +247,63 @@ class _DevolverBensPageState extends State<DevolverBensPage> {
     );
   }
 
-  
-Future<void> _devolverBem() async {
-  if (!_formKey.currentState!.validate()) {
-    return;
-  }
+  Future<void> _devolverBem() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
-  final id = int.tryParse(widget.bem['id'] ?? '');
+    final id = int.tryParse(widget.bem['id'] ?? '');
 
-  if (id == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Não foi possível identificar o patrimônio.'),
-      ),
-    );
-    return;
-  }
+    if (id == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível identificar o patrimônio.'),
+        ),
+      );
+      return;
+    }
 
-  setState(() => _salvando = true);
+    setState(() => _salvando = true);
 
-  try {
-    await _authService.unassignPatrimonio(
-      id,
-      motivo: [
-        'Condição: $_condicaoSelecionada',
-        'Motivo: ${_motivoController.text.trim()}',
-      ].join(' | '),
-    );
+    try {
+      await _authService.unassignPatrimonio(
+        id,
+        motivo: [
+          'Condição: $_condicaoSelecionada',
+          'Motivo: ${_motivoController.text.trim()}',
+        ].join(' | '),
+      );
 
-    if (!mounted) return;
+      final status = _condicaoSelecionada == 'Em bom estado'
+          ? 'disponivel'
+          : 'em_manutencao';
 
-    Navigator.pop(context, true);
-  } on AuthException catch (error) {
-    if (!mounted) return;
+      await _authService.atualizarStatusPatrimonio(id, status: status);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(error.message)),
-    );
-  } catch (error, stackTrace) {
-    debugPrint('Erro ao devolver patrimônio: $error');
-    debugPrint('$stackTrace');
+      if (!mounted) return;
 
-    if (!mounted) return;
+      Navigator.pop(context, true);
+    } on AuthException catch (error) {
+      if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Não foi possível registrar a devolução.'),
-      ),
-    );
-  } finally {
-    if (mounted) {
-      setState(() => _salvando = false);
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error.message)));
+    } catch (error, stackTrace) {
+      debugPrint('Erro ao devolver patrimônio: $error');
+      debugPrint('$stackTrace');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível registrar a devolução.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _salvando = false);
+      }
     }
   }
-}
-
 }

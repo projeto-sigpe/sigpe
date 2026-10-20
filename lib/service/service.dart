@@ -103,7 +103,7 @@ class AuthService {
       // acesso negado
       if (response.statusCode == 403) {
         throw const AuthException(
-          'acesso negado para este usuario.',
+          'acesso negado para este usuÃƒÆ’Ã‚Â¡rio.',
           statusCode: 403,
         );
       }
@@ -115,7 +115,7 @@ class AuthService {
 
         if (accessToken == null || accessToken.isEmpty) {
           throw const AuthException(
-            'a api nao retornou o token de acesso esperado.',
+            'a api nÃƒÆ’Ã‚Â£o retornou o token de acesso esperado.',
           );
         }
 
@@ -145,17 +145,17 @@ class AuthService {
       );
     } on http.ClientException {
       throw const AuthException(
-        'nao foi possivel conectar ao servidor. verifique se a api esta funcionando.',
+        'nÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel conectar ao servidor. verifique se a api estÃƒÆ’Ã‚Â¡ funcionando.',
       );
     } on FormatException {
       throw const AuthException(
-        'a resposta do servidor esta em um formato invalido.',
+        'a resposta do servidor estÃƒÆ’Ã‚Â¡ em um formato invÃƒÆ’Ã‚Â¡lido.',
       );
     } catch (e) {
       debugPrint('erro interno durante o login: $e');
 
       throw const AuthException(
-        'nao foi possivel concluir o login. verifique a conexao e tente novamente.',
+        'nÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel concluir o login. verifique a conexÃƒÆ’Ã‚Â£o e tente novamente.',
       );
     }
   }
@@ -191,20 +191,22 @@ class AuthService {
 
       if (response.statusCode == 409) {
         throw const AuthException(
-          'este e-mail ja esta cadastrado.',
+          'este e-mail jÃƒÆ’Ã‚Â¡ estÃƒÆ’Ã‚Â¡ cadastrado.',
           statusCode: 409,
         );
       }
 
       if (response.statusCode == 400) {
         throw AuthException(
-          _messageFrom(body) ?? 'os dados do cadastro sao invalidos.',
+          _messageFrom(body) ??
+              'os dados do cadastro sÃƒÆ’Ã‚Â£o invÃƒÆ’Ã‚Â¡lidos.',
           statusCode: 400,
         );
       }
 
       throw AuthException(
-        _messageFrom(body) ?? 'nao foi possivel realizar o cadastro.',
+        _messageFrom(body) ??
+            'nÃƒÆ’Ã‚Â£o foi possÃƒÆ’Ã‚Â­vel realizar o cadastro.',
         statusCode: response.statusCode,
       );
     } on AuthException {
@@ -271,63 +273,24 @@ class AuthService {
     }
   }
 
-  // CADASTRAR PROFESSOR (SOMENTE ADMINISTRADOR)
   Future<void> cadastrarProfessor({
     required String nome,
     required String email,
     required String password,
     required String matricula,
     required String departamento,
+    required String telefone,
   }) async {
     final uri = Uri.parse('$baseUrl/api/admin/professores');
 
-    try {
-      final response = await _client
-          .post(
-            uri,
-            headers: {
-              ...await getAuthHeaders(),
-              'Content-Type': 'application/json',
-            },
-            body: jsonEncode({
-              'nome': nome,
-              'email': email,
-              'password': password,
-              'matricula': matricula,
-              'departamento': departamento,
-            }),
-          )
-          .timeout(ApiConfig.requestTimeout);
-
-      final body = _decodeBody(response.body);
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint('Professor cadastrado com sucesso.');
-        return;
-      }
-
-      if (response.statusCode == 409) {
-        throw const AuthException(
-          'Este e-mail ou matrícula já está cadastrado.',
-          statusCode: 409,
-        );
-      }
-
-      throw AuthException(
-        _messageFrom(body) ?? 'Não foi possível cadastrar o professor.',
-        statusCode: response.statusCode,
-      );
-    } on AuthException {
-      rethrow;
-    } on TimeoutException {
-      throw const AuthException('Tempo limite excedido. Tente novamente.');
-    } on http.ClientException {
-      throw const AuthException('Não foi possível conectar ao servidor.');
-    } on FormatException {
-      throw const AuthException(
-        'A resposta do servidor está em formato inválido.',
-      );
-    }
+    await _sendJson(uri, {
+      'nome': nome,
+      'email': email,
+      'password': password,
+      'matricula': matricula,
+      'departamento': departamento,
+      'telefone': telefone,
+    });
   }
 
   Future<Map<String, dynamic>> getProfessorDetails(int professorId) async {
@@ -379,43 +342,20 @@ class AuthService {
     }
   }
 
- 
-Future<List<Map<String, dynamic>>> getPatrimonios({
-  bool meus = false,
-  String? status,
-  String? categoria,
-  String? busca,
-}) async {
-  final query = <String, String>{
-    if (status != null && status.isNotEmpty) 'status': status,
-    if (categoria != null && categoria.isNotEmpty)
-      'categoria': categoria,
-    if (busca != null && busca.isNotEmpty) 'busca': busca,
-  };
-
-  final path = meus
-      ? '/api/patrimonios/meus'
-      : '/api/patrimonios';
-
-  final uri = Uri.parse('$baseUrl$path').replace(
-    queryParameters: query.isEmpty ? null : query,
-  );
-
-  final response = await _client
-      .get(uri, headers: await getAuthHeaders())
-      .timeout(ApiConfig.requestTimeout);
-
-  debugPrint('SIGPE: GET $uri');
-  debugPrint('SIGPE: status HTTP ${response.statusCode}');
-  debugPrint('SIGPE: resposta dos patrimônios: ${response.body}');
-
-  final decoded = _decodeBody(response.body);
-
-  if (response.statusCode < 200 || response.statusCode >= 300) {
-    throw AuthException(
-      _messageFrom(decoded) ??
-          'Não foi possível carregar os patrimônios.',
-      statusCode: response.statusCode,
+  Future<List<Map<String, dynamic>>> getPatrimonios({
+    bool meus = false,
+    String? status,
+    String? categoria,
+    String? busca,
+  }) async {
+    final query = <String, String>{
+      if (status != null && status.isNotEmpty) 'status': status,
+      if (categoria != null && categoria.isNotEmpty) 'categoria': categoria,
+      if (busca != null && busca.isNotEmpty) 'busca': busca,
+    };
+    final path = meus ? '/api/patrimonios/meus' : '/api/patrimonios';
+    final body = await _getJson(
+      Uri.parse('$baseUrl$path').replace(queryParameters: query),
     );
     final values = body['items'] ?? body['patrimonios'] ?? body['data'] ?? body;
 
@@ -430,61 +370,6 @@ Future<List<Map<String, dynamic>>> getPatrimonios({
         .toList();
   }
 
-  // A API pode retornar a lista diretamente ou dentro de um objeto.
-  dynamic procurarLista(dynamic valor, [int nivel = 0]) {
-    if (valor is List) {
-      return valor;
-    }
-
-    if (valor is! Map || nivel >= 5) {
-      return null;
-    }
-
-    // Formatos de resposta aceitos.
-    for (final chave in [
-      'patrimonios',
-      'patrimônios',
-      'data',
-      'items',
-      'results',
-      'content',
-    ]) {
-      if (valor.containsKey(chave)) {
-        final resultado = procurarLista(
-          valor[chave],
-          nivel + 1,
-        );
-
-        if (resultado != null) {
-          return resultado;
-        }
-      }
-    }
-
-    return null;
-  }
-
-  final lista = procurarLista(decoded);
-
-  if (lista == null) {
-    throw AuthException(
-      'A resposta da API não contém uma lista de patrimônios. '
-      'Confira o JSON exibido no console.',
-    );
-  }
-
-  return lista.map<Map<String, dynamic>>((item) {
-    if (item is Map) {
-      return Map<String, dynamic>.from(item);
-    }
-
-    throw const AuthException(
-      'A API retornou um patrimônio em formato inválido.',
-    );
-  }).toList();
-}
-
-
   Future<void> createPatrimonio(Map<String, dynamic> data) async =>
       _sendJson(Uri.parse('$baseUrl/api/patrimonios'), data);
   Future<void> assignPatrimonio(
@@ -496,104 +381,37 @@ Future<List<Map<String, dynamic>>> getPatrimonios({
         'professorId': professorId,
         if (observacoes?.isNotEmpty ?? false) 'observacoes': observacoes,
       });
-  Future<void> unassignPatrimonio(int id, {String? motivo}) async => _sendJson(
-    Uri.parse('$baseUrl/api/admin/patrimonios/$id/desatribuir'),
-    {if (motivo?.isNotEmpty ?? false) 'motivo': motivo},
-  );
-  
-Future<List<Map<String, dynamic>>> getPatrimonioHistory(int id) async {
-  final uri = Uri.parse(
-    '$baseUrl/api/admin/patrimonios/$id/historico',
-  );
+  Future<void> unassignPatrimonio(
+    int id, {
+    String? motivo,
+    String? status,
+  }) async =>
+      _sendJson(Uri.parse('$baseUrl/api/admin/patrimonios/$id/desatribuir'), {
+        if (motivo?.isNotEmpty ?? false) 'motivo': motivo,
+        if (status?.isNotEmpty ?? false) 'status': status,
+      });
 
-  try {
-    final response = await _client
-        .get(uri, headers: await getAuthHeaders())
-        .timeout(ApiConfig.requestTimeout);
+  Future<void> atualizarStatusPatrimonio(
+    int id, {
+    required String status,
+  }) async {
+    await _sendJson(Uri.parse('$baseUrl/api/patrimonios/$id'), {
+      'status': status,
+    }, method: 'PUT');
+  }
 
-    debugPrint('SIGPE: GET $uri');
-    debugPrint('SIGPE: histórico HTTP ${response.statusCode}');
-    debugPrint('SIGPE: resposta do histórico: ${response.body}');
-
-    final body = _decodeBody(response.body);
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw AuthException(
-        _messageFrom(body) ??
-            'Não foi possível carregar o histórico do patrimônio.',
-        statusCode: response.statusCode,
-      );
-    }
-
-    final lista = _procurarListaHistorico(body);
-
-    if (lista == null) {
-      throw const AuthException(
-        'A API não retornou uma lista de movimentações. '
-        'Confira a resposta do histórico no console.',
-      );
-    }
-
-    return lista.map<Map<String, dynamic>>((item) {
-      if (item is Map) {
-        return Map<String, dynamic>.from(item);
-      }
-
-      throw const AuthException(
-        'A API retornou uma movimentação em formato inválido.',
-      );
-    }).toList();
-  } on AuthException {
-    rethrow;
-  } on TimeoutException {
-    throw const AuthException(
-      'Tempo limite excedido ao carregar o histórico.',
+  Future<List<Map<String, dynamic>>> getPatrimonioHistory(int id) async {
+    final body = await _getJson(
+      Uri.parse('$baseUrl/api/admin/patrimonios/$id/historico'),
     );
-  } on http.ClientException {
-    throw const AuthException(
-      'Não foi possível conectar à API para carregar o histórico.',
-    );
-  } on FormatException {
-    throw const AuthException(
-      'A API retornou um JSON inválido no histórico.',
-    );
+    final values = body['historico'] ?? body['data'] ?? body;
+    if (values is! List)
+      throw const AuthException('a API retornou um histÃƒÂ³rico invÃƒÂ¡lido.');
+    return values
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
   }
-}
-
-dynamic _procurarListaHistorico(dynamic valor, [int nivel = 0]) {
-  if (valor is List) {
-    return valor;
-  }
-
-  if (valor is! Map || nivel >= 5) {
-    return null;
-  }
-
-  for (final chave in [
-    'historico',
-    'histórico',
-    'movimentacoes',
-    'movimentações',
-    'history',
-    'data',
-    'items',
-    'results',
-    'content',
-  ]) {
-    if (valor.containsKey(chave)) {
-      final resultado = _procurarListaHistorico(
-        valor[chave],
-        nivel + 1,
-      );
-
-      if (resultado != null) {
-        return resultado;
-      }
-    }
-  }
-
-  return null;
-}
 
   Future<Map<String, dynamic>> getProfile() =>
       _getJson(Uri.parse('$baseUrl/api/profile'));

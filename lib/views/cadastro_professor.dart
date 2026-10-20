@@ -16,6 +16,7 @@ class _CadastroProfessorPageState extends State<CadastroProfessorPage> {
   final _senhaController = TextEditingController();
   final _matriculaController = TextEditingController();
   final _departamentoController = TextEditingController();
+  final _telefoneController = TextEditingController();
 
   final AuthService _authService = AuthService();
 
@@ -29,6 +30,7 @@ class _CadastroProfessorPageState extends State<CadastroProfessorPage> {
     _senhaController.dispose();
     _matriculaController.dispose();
     _departamentoController.dispose();
+    _telefoneController.dispose();
     super.dispose();
   }
 
@@ -63,6 +65,7 @@ class _CadastroProfessorPageState extends State<CadastroProfessorPage> {
         password: _senhaController.text,
         matricula: _matriculaController.text.trim(),
         departamento: _departamentoController.text.trim(),
+        telefone: _telefoneController.text.trim(),
       );
 
       if (!mounted) return;
@@ -190,6 +193,14 @@ class _CadastroProfessorPageState extends State<CadastroProfessorPage> {
                 tipo: TextInputType.emailAddress,
               ),
               const SizedBox(height: 18),
+
+              _campo(
+                label: 'Telefone',
+                dica: '(11) 99999-9999',
+                controller: _telefoneController,
+                validator: _validarObrigatorio,
+                tipo: TextInputType.phone,
+              ),
 
               const Text(
                 'Senha inicial',

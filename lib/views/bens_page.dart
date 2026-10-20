@@ -1,3 +1,4 @@
+// ignore_for_file: unused_element
 
 import 'package:flutter/material.dart';
 import 'package:sigpe/contents/bottom_nav.dart';
@@ -71,9 +72,7 @@ class _BensPageState extends State<BensPage> {
       final items = await _authService.getPatrimonios();
       final bensConvertidos = items.map(_mapBem).toList();
 
-      debugPrint(
-        'SIGPE: ${bensConvertidos.length} patrimônios recebidos.',
-      );
+      debugPrint('SIGPE: ${bensConvertidos.length} patrimônios recebidos.');
       debugPrint('SIGPE: patrimônios convertidos: $bensConvertidos');
 
       if (!mounted) return;
@@ -98,7 +97,7 @@ class _BensPageState extends State<BensPage> {
         _erro = error is AuthException
             ? error.message
             : 'Não foi possível carregar os patrimônios. '
-                'Verifique a conexão e a resposta da API.';
+                  'Verifique a conexão e a resposta da API.';
       });
     } finally {
       if (mounted) {
@@ -125,51 +124,6 @@ class _BensPageState extends State<BensPage> {
     return padrao;
   }
 
-  Map<String, String> _mapBem(Map<String, dynamic> item) {
-    return {
-      'id': _lerCampo(item, ['id'], padrao: ''),
-      'nome': _lerCampo(item, [
-        'nome',
-        'descricao',
-        'description',
-        'name',
-      ]),
-      'tombo': _lerCampo(item, [
-        'codigo',
-        'tombo',
-        'numeroTombo',
-        'numero_tombo',
-        'codigoPatrimonio',
-        'codigo_patrimonio',
-      ]),
-      'categoria': _lerCampo(item, [
-        'categoria',
-        'nomeCategoria',
-        'nome_categoria',
-        'tipo',
-      ]),
-      'local': _lerCampo(item, [
-        'localizacao',
-        'localização',
-        'local',
-        'sala',
-      ]),
-      'status': _lerCampo(item, [
-        'status',
-        'situacao',
-        'situação',
-        'estado',
-      ]),
-      'marca': _lerCampo(item, ['marca', 'fabricante']),
-      'serie': _lerCampo(item, [
-        'numeroSerie',
-        'numero_serie',
-        'numeroDeSerie',
-        'serial',
-      ]),
-    };
-  }
-
   String _normalizar(String texto) {
     return texto
         .toLowerCase()
@@ -192,20 +146,15 @@ class _BensPageState extends State<BensPage> {
   List<String> get _categorias {
     final existentes = _bens
         .map((bem) => bem['categoria'] ?? '')
-        .where(
-          (categoria) =>
-              categoria.isNotEmpty && categoria != '-',
-        )
+        .where((categoria) => categoria.isNotEmpty && categoria != '-')
         .toSet()
         .toList();
 
     existentes.sort();
 
-    return [
-      'Todas as categorias',
-      ...existentes,
-    ];
+    return ['Todas as categorias', ...existentes];
   }
+
   Map<String, String> _mapBem(Map<String, dynamic> item) => {
     'id': item['id']?.toString() ?? '',
     'nome': item['nome']?.toString() ?? '-',
@@ -216,13 +165,6 @@ class _BensPageState extends State<BensPage> {
     'marca': item['marca']?.toString() ?? '-',
     'serie': item['numeroSerie']?.toString() ?? '-',
   };
-
-  final List<String> _categorias = [
-    'Todas as categorias',
-    'Informática',
-    'Audiovisual',
-    'Mobiliário',
-  ];
 
   List<Map<String, String>> get _bensFiltrados {
     return _bens.where((bem) {
@@ -245,29 +187,22 @@ class _BensPageState extends State<BensPage> {
           _categoriaSelecionada == 'Todas as categorias' ||
           categoria == _normalizar(_categoriaSelecionada);
 
-      return correspondeBusca &&
-          correspondeStatus &&
-          correspondeCategoria;
+      return correspondeBusca && correspondeStatus && correspondeCategoria;
     }).toList();
   }
 
   int _contarStatus(String statusDesejado) {
     return _bens.where((bem) {
-      return _normalizar(bem['status'] ?? '') ==
-          _normalizar(statusDesejado);
+      return _normalizar(bem['status'] ?? '') == _normalizar(statusDesejado);
     }).length;
   }
 
-  Future<void> _abrirAtribuicao(
-    Map<String, String> bem,
-  ) async {
+  Future<void> _abrirAtribuicao(Map<String, String> bem) async {
     Navigator.pop(context);
 
     final resultado = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (_) => AtribuirBensPage(bem: bem),
-      ),
+      MaterialPageRoute(builder: (_) => AtribuirBensPage(bem: bem)),
     );
 
     if (resultado == true && mounted) {
@@ -276,23 +211,17 @@ class _BensPageState extends State<BensPage> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Patrimônio atribuído com sucesso!'),
-        ),
+        const SnackBar(content: Text('Patrimônio atribuído com sucesso!')),
       );
     }
   }
 
-  Future<void> _abrirDevolucao(
-    Map<String, String> bem,
-  ) async {
+  Future<void> _abrirDevolucao(Map<String, String> bem) async {
     Navigator.pop(context);
 
     final resultado = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (_) => DevolverBensPage(bem: bem),
-      ),
+      MaterialPageRoute(builder: (_) => DevolverBensPage(bem: bem)),
     );
 
     if (resultado == true && mounted) {
@@ -301,9 +230,7 @@ class _BensPageState extends State<BensPage> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Patrimônio devolvido com sucesso!'),
-        ),
+        const SnackBar(content: Text('Patrimônio devolvido com sucesso!')),
       );
     }
   }
@@ -313,9 +240,7 @@ class _BensPageState extends State<BensPage> {
       context: context,
       backgroundColor: fundo,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(22),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
       builder: (context) {
         return Padding(
@@ -346,10 +271,7 @@ class _BensPageState extends State<BensPage> {
               const SizedBox(height: 4),
               Text(
                 'Tombo: ${bem['tombo'] ?? '-'}',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: Color(0xFF80634E),
-                ),
+                style: const TextStyle(fontSize: 13, color: Color(0xFF80634E)),
               ),
               const SizedBox(height: 18),
               _opcaoBem(
@@ -393,10 +315,7 @@ class _BensPageState extends State<BensPage> {
     required VoidCallback aoTocar,
   }) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 4,
-        vertical: 4,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       leading: Container(
         width: 46,
         height: 46,
@@ -404,10 +323,7 @@ class _BensPageState extends State<BensPage> {
           color: bege,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(
-          icone,
-          color: const Color(0xFF5A3824),
-        ),
+        child: Icon(icone, color: const Color(0xFF5A3824)),
       ),
       title: Text(
         titulo,
@@ -418,15 +334,9 @@ class _BensPageState extends State<BensPage> {
       ),
       subtitle: Text(
         descricao,
-        style: const TextStyle(
-          fontSize: 12,
-          color: Color(0xFF80634E),
-        ),
+        style: const TextStyle(fontSize: 12, color: Color(0xFF80634E)),
       ),
-      trailing: const Icon(
-        Icons.chevron_right,
-        color: Color(0xFF80634E),
-      ),
+      trailing: const Icon(Icons.chevron_right, color: Color(0xFF80634E)),
       onTap: aoTocar,
     );
   }
@@ -448,7 +358,6 @@ class _BensPageState extends State<BensPage> {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => Navigator.maybePop(context),
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
@@ -457,10 +366,7 @@ class _BensPageState extends State<BensPage> {
                         ),
                       );
                     },
-                    icon: const Icon(
-                      Icons.arrow_back,
-                      color: marrom,
-                    ),
+                    icon: const Icon(Icons.arrow_back, color: marrom),
                   ),
                   const Expanded(
                     child: Text(
@@ -489,9 +395,7 @@ class _BensPageState extends State<BensPage> {
 
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text(
-                              'Bem cadastrado com sucesso!',
-                            ),
+                            content: Text('Bem cadastrado com sucesso!'),
                           ),
                         );
                       }
@@ -508,218 +412,191 @@ class _BensPageState extends State<BensPage> {
             Expanded(
               child: _carregando
                   ? const Center(
-                      child: CircularProgressIndicator(
-                        color: marrom,
-                      ),
+                      child: CircularProgressIndicator(color: marrom),
                     )
                   : _erro != null
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.cloud_off_outlined,
+                              size: 44,
+                              color: Color(0xFF80634E),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              _erro!,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: marrom),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: _carregarBens,
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Tentar novamente'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: marrom,
+                                foregroundColor: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: _carregarBens,
+                      color: marrom,
+                      child: ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        children: [
+                          TextField(
+                            onChanged: (valor) {
+                              setState(() => _busca = valor);
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Buscar bem...',
+                              prefixIcon: const Icon(
+                                Icons.search,
+                                color: Color(0xFF80634E),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
+                              contentPadding: const EdgeInsets.symmetric(
+                                vertical: 12,
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE8DED3),
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE8DED3),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Status',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF3B2417),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
                               children: [
-                                const Icon(
-                                  Icons.cloud_off_outlined,
-                                  size: 44,
-                                  color: Color(0xFF80634E),
-                                ),
-                                const SizedBox(height: 12),
-                                Text(
-                                  _erro!,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: marrom,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                ElevatedButton.icon(
-                                  onPressed: _carregarBens,
-                                  icon: const Icon(Icons.refresh),
-                                  label: const Text('Tentar novamente'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: marrom,
-                                    foregroundColor: Colors.white,
-                                  ),
-                                ),
+                                _botaoStatus('Todos', total),
+                                _botaoStatus('Em uso', emUso),
+                                _botaoStatus('Disponível', disponiveis),
+                                _botaoStatus('Manutenção', manutencao),
                               ],
                             ),
                           ),
-                        )
-                      : RefreshIndicator(
-                          onRefresh: _carregarBens,
-                          color: marrom,
-                          child: ListView(
-                            physics:
-                                const AlwaysScrollableScrollPhysics(),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
+                          const SizedBox(height: 18),
+                          const Text(
+                            'Categoria',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF3B2417),
+                              fontWeight: FontWeight.w600,
                             ),
-                            children: [
-                              TextField(
-                                onChanged: (valor) {
-                                  setState(() => _busca = valor);
-                                },
-                                decoration: InputDecoration(
-                                  hintText: 'Buscar bem...',
-                                  prefixIcon: const Icon(
-                                    Icons.search,
-                                    color: Color(0xFF80634E),
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  contentPadding:
-                                      const EdgeInsets.symmetric(
-                                    vertical: 12,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFE8DED3),
-                                    ),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFE8DED3),
-                                    ),
-                                  ),
-                                ),
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0xFFE8DED3),
                               ),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'Status',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFF3B2417),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  children: [
-                                    _botaoStatus('Todos', total),
-                                    _botaoStatus('Em uso', emUso),
-                                    _botaoStatus(
-                                      'Disponível',
-                                      disponiveis,
-                                    ),
-                                    _botaoStatus(
-                                      'Manutenção',
-                                      manutencao,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 18),
-                              const Text(
-                                'Categoria',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFF3B2417),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: const Color(0xFFE8DED3),
-                                  ),
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    value: _categorias.contains(
-                                      _categoriaSelecionada,
-                                    )
-                                        ? _categoriaSelecionada
-                                        : 'Todas as categorias',
-                                    isExpanded: true,
-                                    items: _categorias.map((categoria) {
-                                      return DropdownMenuItem<String>(
-                                        value: categoria,
-                                        child: Text(
-                                          categoria,
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      );
-                                    }).toList(),
-                                    onChanged: (valor) {
-                                      if (valor != null) {
-                                        setState(() {
-                                          _categoriaSelecionada = valor;
-                                        });
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              Text(
-                                '${_bensFiltrados.length} '
-                                '${_bensFiltrados.length == 1 ? 'bem encontrado' : 'bens encontrados'}',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF80634E),
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              if (_bensFiltrados.isEmpty)
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    vertical: 40,
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Icon(
-                                        Icons.inventory_2_outlined,
-                                        size: 48,
-                                        color: Color(0xFF80634E),
-                                      ),
-                                      SizedBox(height: 12),
-                                      Text(
-                                        'Nenhum bem encontrado.',
-                                        style: TextStyle(
-                                          color: Color(0xFF80634E),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              else
-                                ..._bensFiltrados.map((bem) {
-                                  return Padding(
-                                    padding: const EdgeInsets.only(
-                                      bottom: 12,
-                                    ),
-                                    child: InkWell(
-                                      borderRadius:
-                                          BorderRadius.circular(14),
-                                      onTap: () =>
-                                          _mostrarOpcoesBens(bem),
-                                      child: PatrimonioCard(
-                                        nome: bem['nome']!,
-                                        tombo: bem['tombo']!,
-                                        categoria: bem['categoria']!,
-                                        local: bem['local']!,
-                                        status: bem['status']!,
-                                      ),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                value:
+                                    _categorias.contains(_categoriaSelecionada)
+                                    ? _categoriaSelecionada
+                                    : 'Todas as categorias',
+                                isExpanded: true,
+                                items: _categorias.map((categoria) {
+                                  return DropdownMenuItem<String>(
+                                    value: categoria,
+                                    child: Text(
+                                      categoria,
+                                      style: const TextStyle(fontSize: 14),
                                     ),
                                   );
-                                }),
-                              const SizedBox(height: 16),
-                            ],
+                                }).toList(),
+                                onChanged: (valor) {
+                                  if (valor != null) {
+                                    setState(() {
+                                      _categoriaSelecionada = valor;
+                                    });
+                                  }
+                                },
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 20),
+                          Text(
+                            '${_bensFiltrados.length} '
+                            '${_bensFiltrados.length == 1 ? 'bem encontrado' : 'bens encontrados'}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Color(0xFF80634E),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          if (_bensFiltrados.isEmpty)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 40),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.inventory_2_outlined,
+                                    size: 48,
+                                    color: Color(0xFF80634E),
+                                  ),
+                                  SizedBox(height: 12),
+                                  Text(
+                                    'Nenhum bem encontrado.',
+                                    style: TextStyle(color: Color(0xFF80634E)),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            ..._bensFiltrados.map((bem) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(14),
+                                  onTap: () => _mostrarOpcoesBens(bem),
+                                  child: PatrimonioCard(
+                                    nome: bem['nome']!,
+                                    tombo: bem['tombo']!,
+                                    categoria: bem['categoria']!,
+                                    local: bem['local']!,
+                                    status: bem['status']!,
+                                  ),
+                                ),
+                              );
+                            }),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+                    ),
             ),
           ],
         ),
@@ -758,13 +635,9 @@ class _BensPageState extends State<BensPage> {
         showCheckmark: false,
         backgroundColor: Colors.white,
         selectedColor: const Color(0xFF5A3824),
-        side: const BorderSide(
-          color: Color(0xFFE8DED3),
-        ),
+        side: const BorderSide(color: Color(0xFFE8DED3)),
         labelStyle: TextStyle(
-          color: selecionado
-              ? Colors.white
-              : const Color(0xFF5A3824),
+          color: selecionado ? Colors.white : const Color(0xFF5A3824),
           fontSize: 12,
           fontWeight: FontWeight.w500,
         ),
